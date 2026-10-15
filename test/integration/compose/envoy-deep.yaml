@@ -1,0 +1,9 @@
+services:
+  ailuros:
+    environment:
+      AILUROS_INSPECTION_MODE: ${AILUROS_INSPECTION_MODE:-deep}
+
+  envoy:
+    extends: { file: envoy-common.yaml, service: envoy }
+    volumes:
+      - ../../../deploy/envoy/deep.yaml:/etc/envoy/envoy.yaml:ro

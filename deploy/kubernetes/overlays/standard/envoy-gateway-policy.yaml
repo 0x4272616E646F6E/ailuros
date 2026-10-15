@@ -1,0 +1,23 @@
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: EnvoyExtensionPolicy
+metadata:
+  name: ailuros
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: eg
+  extProc:
+    - backendRefs:
+        - name: ailuros
+          port: 9001
+      messageTimeout: 1500ms
+      failOpen: false
+      processingMode:
+        request:
+          body: BufferedPartial
+          attributes:
+            - source.address
+            - connection.requested_server_name
+            - connection.tls_version
+            - request.protocol

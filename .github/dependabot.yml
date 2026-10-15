@@ -1,0 +1,31 @@
+version: 2
+updates:
+  - package-ecosystem: gomod
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      go-minor-patch:
+        update-types: [minor, patch]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      actions:
+        update-types: [minor, patch]
+  - package-ecosystem: docker
+    directories:
+      - /
+      - /test/integration
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      base-images:
+        patterns: ["*"]

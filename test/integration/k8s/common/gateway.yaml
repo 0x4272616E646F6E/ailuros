@@ -1,0 +1,30 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: eg
+spec:
+  gatewayClassName: eg
+  listeners:
+    - { name: http, protocol: HTTP, port: 80 }
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: app
+spec:
+  parentRefs: [{ name: eg }]
+  rules:
+    - backendRefs: [{ name: app, port: 8080 }]
+      filters:
+        - type: RequestHeaderModifier
+          requestHeaderModifier: { remove: [x-ailuros-ja4] }
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: GRPCRoute
+metadata:
+  name: app-grpc
+spec:
+  parentRefs: [{ name: eg }]
+  rules:
+    - matches: [{ method: { service: echo.v1.Echo } }]
+      backendRefs: [{ name: app, port: 8080 }]

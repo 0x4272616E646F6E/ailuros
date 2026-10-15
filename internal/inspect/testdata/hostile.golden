@@ -1,0 +1,8 @@
+method: GET
+path: /search
+query: q=a\nb
+headers:
+  x-bin: �
+  x-evil: line1\r\nfake-header: 1
+body (truncated):
+| caf

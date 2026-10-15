@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ailuros
+  labels:
+    app.kubernetes.io/name: ailuros
+    app.kubernetes.io/component: decision-service
+spec:
+  selector:
+    app.kubernetes.io/name: ailuros
+  ports:
+    - { name: extproc, port: 9001, targetPort: extproc, appProtocol: kubernetes.io/h2c }
+    - { name: extauthz, port: 9003, targetPort: extauthz, appProtocol: kubernetes.io/h2c }
+    - { name: metrics, port: 9090, targetPort: metrics }

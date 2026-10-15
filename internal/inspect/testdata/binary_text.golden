@@ -1,0 +1,4 @@
+method: POST
+path: /upload
+body [text runs]:
+| IHDR · caption: café au lait

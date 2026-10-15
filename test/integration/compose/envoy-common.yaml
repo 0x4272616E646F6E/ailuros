@@ -1,0 +1,12 @@
+services:
+  envoy:
+    image: envoyproxy/envoy:v1.39.4
+    command: ["envoy", "-c", "/etc/envoy/envoy.yaml", "--log-level", "warn"]
+    ports:
+      - "127.0.0.1::8080"
+    depends_on: [ailuros, echo]
+    healthcheck:
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8080"]
+      interval: 1s
+      timeout: 3s
+      retries: 30

@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ailuros
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ailuros
+  template:
+    metadata:
+      labels:
+        app: ailuros
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - name: ailuros
+          env:
+            - { name: AILUROS_CLASSIFIER_BACKEND, value: jev }
+            - { name: AILUROS_CLASSIFIER_BASE_URL, value: "http://stubmodel:8080" }
+            - { name: AILUROS_CLASSIFIER_MODEL, value: stub }
+            - { name: AILUROS_CLASSIFIER_TIMEOUT, value: 1s }
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+              ephemeral-storage: 64Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi

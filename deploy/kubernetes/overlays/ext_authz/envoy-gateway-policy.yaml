@@ -1,0 +1,17 @@
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: SecurityPolicy
+metadata:
+  name: ailuros
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: eg
+  extAuth:
+    failOpen: false
+    statusOnError: 503
+    timeout: 1500ms
+    grpc:
+      backendRefs:
+        - name: ailuros
+          port: 9003

@@ -1,0 +1,50 @@
+dataset  fixture (eval/datasets/fixture.jsonl, sha256 aaaaaaaaaaaa, 11 requests)
+backend  jev, model d1-3b, policy default, run threshold 0.8, ailuros dev, started 2026-10-13T12:00:00Z
+threshold 0.8: 11 requests, 9 scored, 2 errors
+warning: 2 of 11 requests failed and are excluded from detection metrics (rate_limited 1, timeout 1)
+warning: only 5 benign and 4 attack requests were scored; the sweep and recommendations need at least 100 of each to be meaningful
+
+detection (attack vs benign, errors excluded)
+  precision 0.750  recall 0.750  f1 0.750  false-positive rate 0.200
+  TP 3  FP 1  TN 4  FN 1
+
+attacks by label        total  detected  recall  attributed  errors
+  sqli                      3         2   0.667           1       1
+  xss                       1         1   1.000           1       0
+  category attribution 0.667 (detected attacks whose top category is the label)
+
+benign: 5 scored, 1 blocked (fpr 0.200); lookalikes: 2 scored, 1 blocked; 1 errors
+
+threshold sweep
+  threshold precision  recall    fpr     f1
+  0.05          0.500   1.000  0.800  0.667
+  0.10          0.571   1.000  0.600  0.727
+  0.15          0.667   1.000  0.400  0.800
+  0.20          0.667   1.000  0.400  0.800
+  0.25          0.667   1.000  0.400  0.800
+  0.30          0.667   1.000  0.400  0.800
+  0.35          0.800   1.000  0.200  0.889
+  0.40          0.800   1.000  0.200  0.889
+  0.45          0.750   0.750  0.200  0.750
+  0.50          0.750   0.750  0.200  0.750
+  0.55          0.750   0.750  0.200  0.750
+  0.60          0.750   0.750  0.200  0.750
+  0.65          0.750   0.750  0.200  0.750
+  0.70          0.750   0.750  0.200  0.750
+  0.75          0.750   0.750  0.200  0.750
+  0.80          0.750   0.750  0.200  0.750
+  0.85          0.750   0.750  0.200  0.750
+  0.90          1.000   0.500  0.000  0.667
+  0.95          1.000   0.250  0.000  0.400
+
+recommended
+  best F1: threshold 0.40 (precision 0.800, recall 1.000, fpr 0.200, f1 0.889)
+  best recall with fpr <= 0.010: threshold 0.90 (precision 1.000, recall 0.500, fpr 0.000, f1 0.667)
+
+latency p50 600 ms, p95 1100 ms, p99 1100 ms
+errors 2 of 11 (18.2%): rate_limited 1, timeout 1
+
+by tag                 precision  recall    fpr     f1    TP    FP    TN    FN
+  lookalike                0.000     n/a  0.500    n/a     0     1     1     0
+  path                       n/a   0.000    n/a    n/a     0     0     0     1
+  query                    1.000   1.000    n/a  1.000     3     0     0     0

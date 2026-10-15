@@ -1,0 +1,12 @@
+routes:
+  - match: { path_prefix: /admin }
+    failure_mode: closed
+  - match: { path_prefix: /graphql }
+    limits:
+      graphql: { introspection: block, max_depth: 6 }
+  - match: { path_prefix: /ws }
+    limits:
+      websocket: { cross_origin: block }
+redact:
+  headers: [authorization, cookie, set-cookie, proxy-authorization, x-api-key]
+  json_fields: [password]

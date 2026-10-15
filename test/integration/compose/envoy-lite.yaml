@@ -1,0 +1,9 @@
+services:
+  ailuros:
+    environment:
+      AILUROS_INSPECTION_MODE: ${AILUROS_INSPECTION_MODE:-lite}
+
+  envoy:
+    extends: { file: envoy-common.yaml, service: envoy }
+    volumes:
+      - ${ENVOY_LITE_CONFIG:-../../../deploy/envoy/lite.yaml}:/etc/envoy/envoy.yaml:ro

@@ -1,0 +1,12 @@
+{"ailuros_eval_results":1,"dataset":{"path":"eval/datasets/fixture.jsonl","name":"fixture","sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","entries":11},"backend":"jev","model":"d1-3b","threshold":0.8,"policy":"default","body_max_bytes":16384,"ailuros_version":"dev","started":"2026-10-13T12:00:00Z"}
+{"id":"a-1","label":"sqli","tags":["query"],"attack_score":0.95,"category":"sqli","outcome":"block","latency_ms":100}
+{"id":"a-2","label":"sqli","tags":["query"],"attack_score":0.85,"category":"xss","outcome":"block","latency_ms":200}
+{"id":"a-3","label":"sqli","tags":["path"],"attack_score":0.4,"category":"sqli","outcome":"allow","latency_ms":300}
+{"id":"a-4","label":"xss","tags":["query"],"attack_score":0.9,"category":"xss","outcome":"block","latency_ms":400}
+{"id":"a-5","label":"sqli","outcome":"fail_open","error":"timeout","latency_ms":500}
+{"id":"b-1","label":"benign","attack_score":0.05,"outcome":"allow","latency_ms":600}
+{"id":"b-2","label":"benign","attack_score":0.1,"outcome":"allow","latency_ms":700}
+{"id":"b-3","label":"benign","tags":["lookalike"],"attack_score":0.85,"category":"sqli","outcome":"block","latency_ms":800}
+{"id":"b-4","label":"benign","tags":["lookalike"],"attack_score":0.3,"outcome":"allow","latency_ms":900}
+{"id":"b-5","label":"benign","attack_score":0.02,"outcome":"allow","latency_ms":1000}
+{"id":"b-6","label":"benign","outcome":"fail_open","error":"rate_limited","latency_ms":1100}

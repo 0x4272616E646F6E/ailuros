@@ -1,0 +1,14 @@
+services:
+  traefik:
+    image: traefik:v3.7.14
+    volumes:
+      - ./traefik-static.yml:/etc/traefik/traefik.yml:ro
+      - ../../../deploy/traefik/dynamic.yml:/etc/traefik/dynamic.yml:ro
+    ports:
+      - "127.0.0.1::80"
+    depends_on: [ailuros, echo]
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck", "--ping"]
+      interval: 1s
+      timeout: 3s
+      retries: 30

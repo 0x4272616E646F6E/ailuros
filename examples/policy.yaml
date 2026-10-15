@@ -1,0 +1,42 @@
+categories:
+  - name: sqli
+    description: "SQL injection: SQL syntax, quotes, comments, or UNION/boolean tricks in parameters, headers, or body."
+  - name: xss
+    description: "Cross-site scripting: HTML or JavaScript payloads such as script tags, event handlers, or javascript: URLs."
+  - name: path_traversal
+    description: "Path traversal or local file inclusion: ../ sequences, encoded variants, or requests for sensitive files such as /etc/passwd."
+  - name: rce
+    description: "Remote code or command execution: shell metacharacters, command substitution, template or expression injection, deserialization payloads, or JNDI lookups."
+  - name: scanner
+    description: "Automated reconnaissance: vulnerability scanners, probing for admin panels, backups, .git or .env files, or known exploit paths."
+  - name: credential_stuffing
+    description: "Automated login abuse: scripted authentication attempts using lists of usernames and passwords."
+
+routes:
+  - match: { path_prefix: /admin }
+    failure_mode: closed
+  - match: { grpc_service: payments.v1.Payments }
+    failure_mode: closed
+    threshold: 0.6
+  # - match: { path_prefix: /internal/graphql }
+  #   limits:
+  #     graphql: { introspection: allow, max_depth: 30 }
+
+# limits:
+#   graphql:
+#     max_depth: 12
+#     max_aliases: 50
+#     max_fields: 500
+#     max_operations: 1
+#     max_batch: 10
+#     introspection: block
+#   smuggling: block
+#   websocket:
+#     cross_origin: block
+#     bad_version: block
+#   ja4:
+#     block: ["t12i*"]   # exact fingerprints, or a prefix ending in *
+
+redact:
+  headers: [authorization, cookie, set-cookie, proxy-authorization, x-api-key]
+  json_fields: [password, ssn, card_number]

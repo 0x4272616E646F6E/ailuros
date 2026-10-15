@@ -1,0 +1,91 @@
+static_resources:
+  listeners:
+    - name: ingress
+      address:
+        socket_address: { address: 0.0.0.0, port_value: 8080 }
+      # JA4 (optional; needs TLS terminated here): uncomment this, the
+      # header_mutation filter below, and set AILUROS_JA4_HEADER=x-ailuros-ja4
+      # on Ailuros. The filter overwrites any x-ailuros-ja4 a client sends.
+      # listener_filters:
+      #   - name: envoy.filters.listener.tls_inspector
+      #     typed_config:
+      #       "@type": type.googleapis.com/envoy.extensions.filters.listener.tls_inspector.v3.TlsInspector
+      #       enable_ja4_fingerprinting: true
+      filter_chains:
+        - filters:
+            - name: envoy.filters.network.http_connection_manager
+              typed_config:
+                "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+                stat_prefix: ingress
+                upgrade_configs:
+                  - upgrade_type: websocket
+                use_remote_address: true
+                internal_address_config:
+                  cidr_ranges: [{ address_prefix: 192.0.2.255, prefix_len: 32 }]
+                route_config:
+                  virtual_hosts:
+                    - name: app
+                      domains: ["*"]
+                      routes:
+                        - match: { prefix: "/" }
+                          route: { cluster: app }
+                http_filters:
+                  # - name: envoy.filters.http.header_mutation
+                  #   typed_config:
+                  #     "@type": type.googleapis.com/envoy.extensions.filters.http.header_mutation.v3.HeaderMutation
+                  #     mutations:
+                  #       request_mutations:
+                  #         - append:
+                  #             header: { key: x-ailuros-ja4, value: "%TLS_JA4_FINGERPRINT%" }
+                  #             append_action: OVERWRITE_IF_EXISTS_OR_ADD
+                  - name: envoy.filters.http.ext_authz
+                    typed_config:
+                      "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthz
+                      transport_api_version: V3
+                      grpc_service:
+                        envoy_grpc: { cluster_name: ailuros }
+                        timeout: 1.5s
+                      failure_mode_allow: false
+                      status_on_error: { code: ServiceUnavailable }
+                      include_tls_session: true
+                  - name: envoy.filters.http.router
+                    typed_config:
+                      "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+  clusters:
+    - name: ailuros
+      type: STRICT_DNS
+      connect_timeout: 1s
+      typed_extension_protocol_options:
+        envoy.extensions.upstreams.http.v3.HttpProtocolOptions:
+          "@type": type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions
+          explicit_http_config:
+            http2_protocol_options: {}
+      health_checks:
+        - timeout: 1s
+          interval: 5s
+          unhealthy_threshold: 2
+          healthy_threshold: 1
+          grpc_health_check: {}
+      load_assignment:
+        cluster_name: ailuros
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address: { address: ailuros, port_value: 9003 }
+    - name: app
+      type: STRICT_DNS
+      connect_timeout: 1s
+      typed_extension_protocol_options:
+        envoy.extensions.upstreams.http.v3.HttpProtocolOptions:
+          "@type": type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions
+          use_downstream_protocol_config:
+            http_protocol_options: {}
+            http2_protocol_options: {}
+      load_assignment:
+        cluster_name: app
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address: { address: app, port_value: 8080 }

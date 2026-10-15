@@ -1,0 +1,18 @@
+http:
+  middlewares:
+    ailuros:
+      forwardAuth:
+        address: http://ailuros:9002/
+        trustForwardHeader: false
+        authResponseHeaders:
+          - X-Ailuros-Request-Id
+  routers:
+    app:
+      rule: Host(`app.example.com`)
+      service: app
+      middlewares: [ailuros]
+  services:
+    app:
+      loadBalancer:
+        servers:
+          - url: http://app:8080

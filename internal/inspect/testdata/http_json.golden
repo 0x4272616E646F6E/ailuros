@@ -1,0 +1,14 @@
+method: POST
+scheme: https
+host: shop.example.com
+path: /api/cart
+query: id=7&debug=1
+client_ip: 203.0.113.9
+tls_sni: shop.example.com
+tls_version: TLSv1.3
+headers:
+  accept: */*
+  content-type: application/json
+  user-agent: curl/8.9
+body:
+| {"item":"' OR 1=1 --"}

@@ -1,0 +1,10 @@
+services:
+  ailuros:
+    environment:
+      AILUROS_INSPECTION_MODE: ${AILUROS_INSPECTION_MODE:-lite}
+      AILUROS_EXTAUTHZ_ADDR: ":9003"
+
+  envoy:
+    extends: { file: envoy-common.yaml, service: envoy }
+    volumes:
+      - ../../../deploy/envoy/ext_authz.yaml:/etc/envoy/envoy.yaml:ro

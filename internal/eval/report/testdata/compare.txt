@@ -1,0 +1,17 @@
+compare at threshold 0.8
+A  jev / d1-3b on fixture (sha256 aaaaaaaaaaaa), ailuros dev
+B  openai / local-llm on fixture (sha256 aaaaaaaaaaaa), ailuros dev
+
+                               A                    B
+backend / model                jev / d1-3b          openai / local-llm
+scored / errors                9 / 2                11 / 0
+precision                      0.750                1.000
+recall                         0.750                0.800
+f1                             0.750                0.889
+false-positive rate            0.200                0.000
+latency p50 / p95 ms           600 / 1100           300 / 550
+best F1 threshold              0.40                 0.70
+best recall, fpr <= 0.010      0.90                 0.70
+warning (A): 2 of 11 requests failed and are excluded from detection metrics (rate_limited 1, timeout 1)
+warning (A): only 5 benign and 4 attack requests were scored; the sweep and recommendations need at least 100 of each to be meaningful
+warning (B): only 6 benign and 5 attack requests were scored; the sweep and recommendations need at least 100 of each to be meaningful

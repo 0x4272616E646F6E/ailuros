@@ -1,0 +1,8 @@
+method: POST
+scheme: http
+host: api.internal
+path: /payments.v1.Payments/Charge
+grpc_method: payments.v1.Payments/Charge
+headers:
+  content-type: application/grpc
+body [binary, 7 bytes, no readable text]

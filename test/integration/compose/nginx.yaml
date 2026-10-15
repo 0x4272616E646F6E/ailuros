@@ -1,0 +1,13 @@
+services:
+  nginx:
+    image: nginx:1.30.5-alpine
+    volumes:
+      - ../../../deploy/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "127.0.0.1::80"
+    depends_on: [ailuros, echo]
+    healthcheck:
+      test: ["CMD", "curl", "-s", "-o", "/dev/null", "http://127.0.0.1/"]
+      interval: 1s
+      timeout: 3s
+      retries: 30

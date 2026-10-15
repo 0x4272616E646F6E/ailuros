@@ -1,0 +1,12 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: ailuros
+  labels:
+    app.kubernetes.io/name: ailuros
+    app.kubernetes.io/component: decision-service
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ailuros

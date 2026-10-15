@@ -1,0 +1,5 @@
+method: POST
+path: /accounts.v1.Accounts/Login
+grpc_method: accounts.v1.Accounts/Login
+body [text runs]:
+| admin · x' OR '1'='1 -- DROP TABLE

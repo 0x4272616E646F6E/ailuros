@@ -1,0 +1,10 @@
+nameReference:
+  - kind: Service
+    version: v1
+    fieldSpecs:
+      - kind: EnvoyExtensionPolicy
+        group: gateway.envoyproxy.io
+        path: spec/extProc/backendRefs/name
+      - kind: SecurityPolicy
+        group: gateway.envoyproxy.io
+        path: spec/extAuth/grpc/backendRefs/name

@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ailuros-policy
+  labels:
+    app.kubernetes.io/name: ailuros
+    app.kubernetes.io/component: decision-service
+data:
+  policy.yaml: |
+    # Empty: the built-in defaults apply (the default categories, no routes,
+    # and the default redacted headers, policy.DefaultRedact; see
+    # docs/design/architecture.md) and follow new releases. A section you add
+    # replaces its default, so a redact section must list the default headers
+    # too; examples/policy.yaml starts from the defaults.

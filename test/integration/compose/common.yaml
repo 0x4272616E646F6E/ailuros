@@ -1,0 +1,51 @@
+name: ailuros-it
+
+services:
+  ailuros:
+    image: ailuros-it/ailuros:dev
+    build: { context: ../../.., dockerfile: Dockerfile }
+    environment:
+      AILUROS_CLASSIFIER_BACKEND: ${AILUROS_CLASSIFIER_BACKEND:-jev}
+      AILUROS_CLASSIFIER_BASE_URL: ${AILUROS_CLASSIFIER_BASE_URL:-http://stubmodel:8080}
+      AILUROS_CLASSIFIER_MODEL: ${AILUROS_CLASSIFIER_MODEL:-stub}
+      AILUROS_CLASSIFIER_API_KEY: ${AILUROS_CLASSIFIER_API_KEY:-}
+      AILUROS_CLASSIFIER_TIMEOUT: ${AILUROS_CLASSIFIER_TIMEOUT:-1s}
+      AILUROS_INSPECTION_MODE: ${AILUROS_INSPECTION_MODE:-lite}
+      AILUROS_FAILURE_MODE:
+      AILUROS_DEEP_OVERSIZE:
+      AILUROS_DEEP_MAX_MESSAGES:
+      AILUROS_EXTAUTHZ_ADDR:
+      AILUROS_POLICY_FILE: /policy.yaml
+    volumes:
+      - ../k8s/common/policy.yaml:/policy.yaml:ro
+    ports:
+      - "127.0.0.1::9090"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      stubmodel: { condition: service_healthy }
+
+  stubmodel:
+    image: ailuros-it/stubmodel:dev
+    build: { context: ../../.., dockerfile: test/integration/Dockerfile, target: stubmodel }
+    ports:
+      - "127.0.0.1::8080"
+    healthcheck:
+      test: ["CMD", "/stubmodel", "-healthcheck", "http://127.0.0.1:8080/healthz"]
+      interval: 1s
+      timeout: 3s
+      retries: 30
+
+  echo:
+    image: ailuros-it/echo:dev
+    build: { context: ../../.., dockerfile: test/integration/Dockerfile, target: echo }
+    networks:
+      default:
+        aliases: [app]
+    ports:
+      - "127.0.0.1::8081"
+    healthcheck:
+      test: ["CMD", "/echo", "-healthcheck", "http://127.0.0.1:8081/healthz"]
+      interval: 1s
+      timeout: 3s
+      retries: 30
