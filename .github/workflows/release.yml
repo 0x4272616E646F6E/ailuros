@@ -47,7 +47,7 @@ jobs:
       id-token: write
       attestations: write
     env:
-      IMAGE: ghcr.io/${{ github.repository }}
+      IMAGE: ghcr.io/0x4272616e646f6e/ailuros
     steps:
       - uses: step-security/harden-runner@ccd8616d44fd3846e67624a50d5aad6d37bf2d25
         with:

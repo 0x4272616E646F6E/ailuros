@@ -11,7 +11,7 @@ v1.37.0 (the kind node image);
 | `deep` | `EnvoyExtensionPolicy`, body `FullDuplexStreamed`, plus a `BackendTrafficPolicy` and a `ClientTrafficPolicy` | headers, then the body as it streams; gRPC message by message |
 | `ext_authz` | `SecurityPolicy` (ext_authz) | request headers |
 
-**Install.** Use a release image, `ghcr.io/0x4272616E646F6E/ailuros:<X.Y.Z>`
+**Install.** Use a release image, `ghcr.io/0x4272616e646f6e/ailuros:<X.Y.Z>`
 (check it first as in [Verifying images](verifying-images.md)), or build and
 push your own (`docker build -t <registry>/ailuros:<tag> .`). Then make your
 own Kustomization on top of an overlay that sets the image and the model:
@@ -23,7 +23,7 @@ namespace: my-app
 resources:
   - <path to your Ailuros checkout>/deploy/kubernetes/overlays/standard
 images:
-  - { name: ailuros, newName: ghcr.io/0x4272616E646F6E/ailuros, newTag: <X.Y.Z> }
+  - { name: ailuros, newName: ghcr.io/0x4272616e646f6e/ailuros, newTag: <X.Y.Z> }
 patches:
   - patch: |-
       apiVersion: apps/v1

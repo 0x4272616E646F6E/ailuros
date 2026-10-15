@@ -22,7 +22,7 @@ Rejected or out of scope:
 
 - **Other Gateway API implementations** (Istio, Cilium, kGateway). Each has its own CRDs for external processing, and core Gateway API has no standard ext_authz or ext_proc hook. Supporting them would mean separate manifests and test matrices.
 - **A Helm chart.** Kustomize overlays are enough for a handful of fixed variants, and they render offline with `kubectl kustomize`.
-- **Overlays tied to a published image.** The base uses the placeholder image `ailuros`; operators set the release image (`ghcr.io/0x4272616E646F6E/ailuros`) or their own build with Kustomize `images:`, so the manifests never pin a version.
+- **Overlays tied to a published image.** The base uses the placeholder image `ailuros`; operators set the release image (`ghcr.io/0x4272616e646f6e/ailuros`) or their own build with Kustomize `images:`, so the manifests never pin a version.
 
 ### One overlay per mode, one Deployment per mode
 
