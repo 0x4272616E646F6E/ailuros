@@ -5,7 +5,7 @@ All notable changes to Ailuros are listed here. The format follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Before 1.0, a
 minor version may change behavior or configuration; the entry says how.
 
-## [Unreleased]
+## [0.1.0] - 2026-10-15
 
 The first release.
 
@@ -74,4 +74,4 @@ The first release.
 - Release images for linux/amd64 and linux/arm64, signed with cosign, with
   SBOMs and SLSA build provenance.
 
-[Unreleased]: https://github.com/0x4272616E646F6E/ailuros/commits/main
+[0.1.0]: https://github.com/0x4272616E646F6N/ailuros/releases/tag/v0.1.0
