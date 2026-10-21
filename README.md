@@ -54,7 +54,9 @@ Jev's API also enforces rate limits; size your deployment accordingly.
 - [Envoy](docs/envoy.md): `ext_proc` and `ext_authz`, the three inspection
   modes, timeouts, gRPC.
 - [NGINX and Traefik](docs/nginx-traefik.md): forward-auth, client IP, and
-  the headers the proxy must control.
+  the headers the proxy must control; inspecting every request on NGINX
+  Gateway Fabric with the
+  [Ailuros NGINX module](https://github.com/0x4272616E646F6E/ailuros-nginx-module).
 - [Kubernetes (Envoy Gateway)](docs/kubernetes.md): Kustomize overlays,
   attaching policies, availability.
 - [Request signals and limits](docs/signals.md): GraphQL shape, smuggling,

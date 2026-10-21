@@ -20,6 +20,37 @@ handshakes are not detected. There is no protocol (so no `te_on_h2`) and no
 JA4: a client header carrying either could be forged. See
 [Request signals and limits](signals.md).
 
+## NGINX Gateway Fabric: every request, next to tinyauth
+
+`auth_request` allows one check per location, so on a route that already
+uses it for an auth service such as tinyauth, Ailuros only sees the requests
+that reach that service's auth flow. Nesting the Ailuros check inside the auth
+service's location does not help: NGINX skips access-phase handlers in
+subrequests.
+
+For [NGINX Gateway Fabric](https://github.com/nginx/nginx-gateway-fabric),
+the [Ailuros NGINX module](https://github.com/0x4272616E646F6E/ailuros-nginx-module)
+closes that gap. It is a dynamic module, loaded into NGF's stock NGINX image
+from a ConfigMap, that asks Ailuros about every request on the routes it is
+attached to, before `auth_request` runs. It calls this same forward-auth
+endpoint on `:9002`, so Ailuros needs no extra configuration. Releases,
+supported NGF versions and the install manifests are in that repository.
+
+How the module applies Ailuros's answer differs from `auth_request`:
+
+- 403 (block, including malformed requests) reaches the client as 403, and
+  Ailuros's own 503 (fail closed) as 503.
+- Any other answer, such as the 500 for a misconfigured proxy, and an
+  unreachable Ailuros are "no decision". The module's
+  `ailuros_request_unavailable` setting then fails closed (503, the default)
+  or lets the request through with a warning in NGINX's error log.
+- The module also passes 400 and 413 through, though forward-auth does not
+  currently send them.
+
+The module only sends headers, so forward-auth's limits above apply to it
+too. The proxy hygiene rules below apply to its `/_ailuros` location as
+well.
+
 ## When Ailuros itself is unreachable
 
 `AILUROS_FAILURE_MODE` only governs model failures. If Ailuros is down or

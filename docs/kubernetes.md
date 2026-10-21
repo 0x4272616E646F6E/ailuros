@@ -11,6 +11,9 @@ v1.37.0 (the kind node image);
 | `deep` | `EnvoyExtensionPolicy`, body `FullDuplexStreamed`, plus a `BackendTrafficPolicy` and a `ClientTrafficPolicy` | headers, then the body as it streams; gRPC message by message |
 | `ext_authz` | `SecurityPolicy` (ext_authz) | request headers |
 
+On NGINX Gateway Fabric instead, see
+[NGINX Gateway Fabric](nginx-traefik.md#nginx-gateway-fabric-every-request-next-to-tinyauth).
+
 **Install.** Use a release image, `ghcr.io/0x4272616e646f6e/ailuros:<X.Y.Z>`
 (check it first as in [Verifying images](verifying-images.md)), or build and
 push your own (`docker build -t <registry>/ailuros:<tag> .`). Then make your

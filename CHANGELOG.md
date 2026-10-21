@@ -5,6 +5,14 @@ All notable changes to Ailuros are listed here. The format follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Before 1.0, a
 minor version may change behavior or configuration; the entry says how.
 
+## [Unreleased]
+
+### Documentation
+
+- NGINX Gateway Fabric: the Ailuros NGINX module inspects every request on a
+  route alongside tinyauth or another `auth_request` check, and how it applies
+  forward-auth's answers.
+
 ## [0.1.0] - 2026-10-15
 
 The first release.
