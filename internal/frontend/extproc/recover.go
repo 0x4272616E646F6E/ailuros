@@ -7,8 +7,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/0x4272616E646F6E/ailuros/internal/decision"
-	"github.com/0x4272616E646F6E/ailuros/internal/frontend"
+	"github.com/0x4272616E646F6E/decision-waf/internal/decision"
+	"github.com/0x4272616E646F6E/decision-waf/internal/frontend"
 )
 
 func (st *stream) safeHandle(msg *extprocv3.ProcessingRequest) (resps []*extprocv3.ProcessingResponse, done bool, err error) {

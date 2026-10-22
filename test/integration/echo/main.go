@@ -22,7 +22,7 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/protobuf/types/known/structpb"
 
-	"github.com/0x4272616E646F6E/ailuros/test/integration/echo/echopb"
+	"github.com/0x4272616E646F6E/decision-waf/test/integration/echo/echopb"
 )
 
 const (

@@ -3,8 +3,8 @@ package extproc
 import (
 	extprocv3 "github.com/envoyproxy/go-control-plane/envoy/service/ext_proc/v3"
 
-	"github.com/0x4272616E646F6E/ailuros/internal/decision"
-	"github.com/0x4272616E646F6E/ailuros/internal/frontend/envoyreq"
+	"github.com/0x4272616E646F6E/decision-waf/internal/decision"
+	"github.com/0x4272616E646F6E/decision-waf/internal/frontend/envoyreq"
 )
 
 func (st *stream) standardBody(b *extprocv3.HttpBody) ([]*extprocv3.ProcessingResponse, bool) {

@@ -19,8 +19,8 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 
-	"github.com/0x4272616E646F6E/ailuros/internal/classifier/fake"
-	"github.com/0x4272616E646F6E/ailuros/internal/inspect"
+	"github.com/0x4272616E646F6E/decision-waf/internal/classifier/fake"
+	"github.com/0x4272616E646F6E/decision-waf/internal/inspect"
 )
 
 func dial(t *testing.T, addr string) *grpc.ClientConn {

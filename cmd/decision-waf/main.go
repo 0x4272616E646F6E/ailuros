@@ -8,9 +8,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/0x4272616E646F6E/ailuros/internal/app"
-	"github.com/0x4272616E646F6E/ailuros/internal/config"
-	"github.com/0x4272616E646F6E/ailuros/internal/telemetry"
+	"github.com/0x4272616E646F6E/decision-waf/internal/app"
+	"github.com/0x4272616E646F6E/decision-waf/internal/config"
+	"github.com/0x4272616E646F6E/decision-waf/internal/telemetry"
 )
 
 func main() {

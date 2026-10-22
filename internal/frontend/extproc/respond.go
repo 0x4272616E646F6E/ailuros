@@ -5,9 +5,9 @@ import (
 	extprocv3 "github.com/envoyproxy/go-control-plane/envoy/service/ext_proc/v3"
 	typev3 "github.com/envoyproxy/go-control-plane/envoy/type/v3"
 
-	"github.com/0x4272616E646F6E/ailuros/internal/decision"
-	"github.com/0x4272616E646F6E/ailuros/internal/frontend"
-	"github.com/0x4272616E646F6E/ailuros/internal/frontend/envoyreq"
+	"github.com/0x4272616E646F6E/decision-waf/internal/decision"
+	"github.com/0x4272616E646F6E/decision-waf/internal/frontend"
+	"github.com/0x4272616E646F6E/decision-waf/internal/frontend/envoyreq"
 )
 
 func (st *stream) continueFor(msg *extprocv3.ProcessingRequest, extra []byte, set []*corev3.HeaderValueOption) []*extprocv3.ProcessingResponse {

@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/0x4272616E646F6E/ailuros/internal/eval/results"
+	"github.com/0x4272616E646F6E/decision-waf/internal/eval/results"
 )
 
 func score(v float64) *float64 { return &v }

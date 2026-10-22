@@ -1,6 +1,6 @@
 package signals
 
-import "github.com/0x4272616E646F6E/ailuros/internal/policy"
+import "github.com/0x4272616E646F6E/decision-waf/internal/policy"
 
 func Check(s Signals, l policy.Limits) (limit string, hit bool) {
 	if l.Smuggling.Blocks() && len(s.Smuggling) > 0 {

@@ -12,9 +12,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/0x4272616E646F6E/ailuros/internal/backend"
-	"github.com/0x4272616E646F6E/ailuros/internal/classifier"
-	"github.com/0x4272616E646F6E/ailuros/internal/config"
+	"github.com/0x4272616E646F6E/decision-waf/internal/backend"
+	"github.com/0x4272616E646F6E/decision-waf/internal/classifier"
+	"github.com/0x4272616E646F6E/decision-waf/internal/config"
 )
 
 const usage = `usage:

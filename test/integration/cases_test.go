@@ -15,7 +15,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 
-	"github.com/0x4272616E646F6E/ailuros/test/integration/echo/echopb"
+	"github.com/0x4272616E646F6E/decision-waf/test/integration/echo/echopb"
 )
 
 func binaryBody(marker string) []byte {

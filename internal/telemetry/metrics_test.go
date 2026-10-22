@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/0x4272616E646F6E/ailuros/internal/classifier"
+	"github.com/0x4272616E646F6E/decision-waf/internal/classifier"
 )
 
 func TestMetricsHandlerExposesSeries(t *testing.T) {

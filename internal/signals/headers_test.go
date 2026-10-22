@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/0x4272616E646F6E/ailuros/internal/inspect"
+	"github.com/0x4272616E646F6E/decision-waf/internal/inspect"
 )
 
 func TestSmugglingFlags(t *testing.T) {

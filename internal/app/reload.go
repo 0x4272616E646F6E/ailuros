@@ -7,7 +7,7 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 
-	"github.com/0x4272616E646F6E/ailuros/internal/policy"
+	"github.com/0x4272616E646F6E/decision-waf/internal/policy"
 )
 
 const reloadDebounce = 200 * time.Millisecond

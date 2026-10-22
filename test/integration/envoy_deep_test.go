@@ -14,7 +14,7 @@ import (
 	"google.golang.org/grpc/encoding"
 	"google.golang.org/grpc/encoding/gzip"
 
-	"github.com/0x4272616E646F6E/ailuros/test/integration/echo/echopb"
+	"github.com/0x4272616E646F6E/decision-waf/test/integration/echo/echopb"
 )
 
 type fakeSnappy struct{}

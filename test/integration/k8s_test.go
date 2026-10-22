@@ -239,7 +239,7 @@ func upK8s(t *testing.T, overlay string) *Stack {
 	for _, d := range []string{"ailuros", "stubmodel", "echo"} {
 		mustKubectl(t, "-n", ns, "rollout", "status", "deployment/"+d, "--timeout="+k8sReadyWait)
 	}
-	policies := []string{policyKind(overlay) + "/ailuros"}
+	policies := []string{policyKind(overlay) + "/decision-waf"}
 	if overlay == "deep" {
 		policies = append(policies, "backendtrafficpolicy/ailuros-deep-timeouts", "clienttrafficpolicy/ailuros-deep-client-timeouts")
 	}

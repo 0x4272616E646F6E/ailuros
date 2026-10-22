@@ -18,7 +18,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/0x4272616E646F6E/ailuros/internal/config"
+	"github.com/0x4272616E646F6E/decision-waf/internal/config"
 )
 
 var keep = flag.Bool("keep", false, "leave the compose stacks or kind cluster running after the tests")

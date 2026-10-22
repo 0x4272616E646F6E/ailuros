@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/0x4272616E646F6E/ailuros/internal/eval/metrics"
-	"github.com/0x4272616E646F6E/ailuros/internal/eval/report"
-	"github.com/0x4272616E646F6E/ailuros/internal/eval/results"
+	"github.com/0x4272616E646F6E/decision-waf/internal/eval/metrics"
+	"github.com/0x4272616E646F6E/decision-waf/internal/eval/report"
+	"github.com/0x4272616E646F6E/decision-waf/internal/eval/results"
 )
 
 func (c cli) reportCmd(args []string) error {

@@ -5,8 +5,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/0x4272616E646F6E/ailuros/internal/inspect"
-	"github.com/0x4272616E646F6E/ailuros/internal/policy"
+	"github.com/0x4272616E646F6E/decision-waf/internal/inspect"
+	"github.com/0x4272616E646F6E/decision-waf/internal/policy"
 )
 
 const Instructions = `You are the request classifier for a web application firewall. ` +

@@ -13,14 +13,14 @@ import (
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/0x4272616E646F6E/ailuros/internal/classifier"
-	"github.com/0x4272616E646F6E/ailuros/internal/inspect"
-	"github.com/0x4272616E646F6E/ailuros/internal/policy"
-	"github.com/0x4272616E646F6E/ailuros/internal/redact"
-	"github.com/0x4272616E646F6E/ailuros/internal/signals"
+	"github.com/0x4272616E646F6E/decision-waf/internal/classifier"
+	"github.com/0x4272616E646F6E/decision-waf/internal/inspect"
+	"github.com/0x4272616E646F6E/decision-waf/internal/policy"
+	"github.com/0x4272616E646F6E/decision-waf/internal/redact"
+	"github.com/0x4272616E646F6E/decision-waf/internal/signals"
 )
 
-var tracer = otel.Tracer("github.com/0x4272616E646F6E/ailuros/internal/decision")
+var tracer = otel.Tracer("github.com/0x4272616E646F6E/decision-waf/internal/decision")
 
 type Outcome string
 

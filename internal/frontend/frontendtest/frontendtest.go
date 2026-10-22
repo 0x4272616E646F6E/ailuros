@@ -12,10 +12,10 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/test/bufconn"
 
-	"github.com/0x4272616E646F6E/ailuros/internal/classifier"
-	"github.com/0x4272616E646F6E/ailuros/internal/decision"
-	"github.com/0x4272616E646F6E/ailuros/internal/inspect"
-	"github.com/0x4272616E646F6E/ailuros/internal/policy"
+	"github.com/0x4272616E646F6E/decision-waf/internal/classifier"
+	"github.com/0x4272616E646F6E/decision-waf/internal/decision"
+	"github.com/0x4272616E646F6E/decision-waf/internal/inspect"
+	"github.com/0x4272616E646F6E/decision-waf/internal/policy"
 )
 
 func Engine(c classifier.Classifier, failure policy.FailureMode, obs decision.Observer) *decision.Engine {

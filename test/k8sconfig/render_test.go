@@ -16,10 +16,10 @@ import (
 
 	yaml "go.yaml.in/yaml/v3"
 
-	"github.com/0x4272616E646F6E/ailuros/internal/app"
-	"github.com/0x4272616E646F6E/ailuros/internal/config"
-	"github.com/0x4272616E646F6E/ailuros/internal/frontend/extproc"
-	"github.com/0x4272616E646F6E/ailuros/internal/policy"
+	"github.com/0x4272616E646F6E/decision-waf/internal/app"
+	"github.com/0x4272616E646F6E/decision-waf/internal/config"
+	"github.com/0x4272616E646F6E/decision-waf/internal/frontend/extproc"
+	"github.com/0x4272616E646F6E/decision-waf/internal/policy"
 )
 
 const root = "../../deploy/kubernetes"

@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/0x4272616E646F6E/ailuros/internal/config"
-	"github.com/0x4272616E646F6E/ailuros/internal/frontend/extproc"
+	"github.com/0x4272616E646F6E/decision-waf/internal/config"
+	"github.com/0x4272616E646F6E/decision-waf/internal/frontend/extproc"
 )
 
 var proxyTimeout = config.DefaultClassifierTimeout + config.ProxyTimeoutMargin

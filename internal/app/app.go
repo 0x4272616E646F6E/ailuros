@@ -20,16 +20,16 @@ import (
 	"google.golang.org/grpc/health"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 
-	"github.com/0x4272616E646F6E/ailuros/internal/backend"
-	"github.com/0x4272616E646F6E/ailuros/internal/classifier"
-	"github.com/0x4272616E646F6E/ailuros/internal/config"
-	"github.com/0x4272616E646F6E/ailuros/internal/decision"
-	"github.com/0x4272616E646F6E/ailuros/internal/frontend/extauthz"
-	"github.com/0x4272616E646F6E/ailuros/internal/frontend/extproc"
-	"github.com/0x4272616E646F6E/ailuros/internal/frontend/forwardauth"
-	"github.com/0x4272616E646F6E/ailuros/internal/policy"
-	"github.com/0x4272616E646F6E/ailuros/internal/telemetry"
-	"github.com/0x4272616E646F6E/ailuros/internal/version"
+	"github.com/0x4272616E646F6E/decision-waf/internal/backend"
+	"github.com/0x4272616E646F6E/decision-waf/internal/classifier"
+	"github.com/0x4272616E646F6E/decision-waf/internal/config"
+	"github.com/0x4272616E646F6E/decision-waf/internal/decision"
+	"github.com/0x4272616E646F6E/decision-waf/internal/frontend/extauthz"
+	"github.com/0x4272616E646F6E/decision-waf/internal/frontend/extproc"
+	"github.com/0x4272616E646F6E/decision-waf/internal/frontend/forwardauth"
+	"github.com/0x4272616E646F6E/decision-waf/internal/policy"
+	"github.com/0x4272616E646F6E/decision-waf/internal/telemetry"
+	"github.com/0x4272616E646F6E/decision-waf/internal/version"
 )
 
 const (

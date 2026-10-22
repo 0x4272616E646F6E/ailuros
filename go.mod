@@ -1,4 +1,4 @@
-module github.com/0x4272616E646F6E/ailuros
+module github.com/0x4272616E646F6E/decision-waf
 
 go 1.27
 

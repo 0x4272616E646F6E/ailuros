@@ -3,11 +3,11 @@
 ENVOY_IMAGE ?= envoyproxy/envoy:v1.39.4
 
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
-LDFLAGS := -X github.com/0x4272616E646F6E/ailuros/internal/version.Version=$(VERSION)
+LDFLAGS := -X github.com/0x4272616E646F6E/decision-waf/internal/version.Version=$(VERSION)
 
 build:
-	go build -ldflags "$(LDFLAGS)" -o bin/ailuros ./cmd/ailuros
-	go build -ldflags "$(LDFLAGS)" -o bin/ailuros-eval ./cmd/ailuros-eval
+	go build -ldflags "$(LDFLAGS)" -o bin/decision-waf ./cmd/decision-waf
+	go build -ldflags "$(LDFLAGS)" -o bin/decision-waf-eval ./cmd/decision-waf-eval
 
 test:
 	go test -race ./...
@@ -53,8 +53,8 @@ eval: export AILUROS_CLASSIFIER_TIMEOUT = $(or $(value MODEL_TIMEOUT),10s)
 eval: build
 	@test -n "$$AILUROS_CLASSIFIER_BASE_URL" -a -n "$$AILUROS_CLASSIFIER_MODEL" || { echo "usage: make eval MODEL_URL=<base URL> MODEL=<name> [DATASET=<file>] [MODEL_BACKEND=jev|openai] [MODEL_API_KEY=<key>] [MODEL_TIMEOUT=10s] [SAMPLE=N] [CONCURRENCY=N] [EVAL_OUT=<file> RESUME=1]"; exit 2; }
 	@test -z "$(RESUME)" -o "$(EVAL_OUT_ORIGIN)" != undefined || { echo "RESUME=1 needs EVAL_OUT=<results file> to continue; without it a new run would start"; exit 2; }
-	bin/ailuros-eval run --dataset "$(DATASET)" --out "$(EVAL_OUT)" --concurrency $(or $(CONCURRENCY),1) $(if $(SAMPLE),--sample $(SAMPLE)) $(if $(RESUME),--resume)
-	bin/ailuros-eval report "$(EVAL_OUT)"
+	bin/decision-waf-eval run --dataset "$(DATASET)" --out "$(EVAL_OUT)" --concurrency $(or $(CONCURRENCY),1) $(if $(SAMPLE),--sample $(SAMPLE)) $(if $(RESUME),--resume)
+	bin/decision-waf-eval report "$(EVAL_OUT)"
 
 validate-k8s:
 	go test -count=1 -v ./test/k8sconfig/

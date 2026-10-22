@@ -11,8 +11,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/0x4272616E646F6E/ailuros/internal/eval/strictjson"
-	"github.com/0x4272616E646F6E/ailuros/internal/policy"
+	"github.com/0x4272616E646F6E/decision-waf/internal/eval/strictjson"
+	"github.com/0x4272616E646F6E/decision-waf/internal/policy"
 )
 
 const Version = 1

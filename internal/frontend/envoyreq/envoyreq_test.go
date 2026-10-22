@@ -11,9 +11,9 @@ import (
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/0x4272616E646F6E/ailuros/internal/classifier"
-	"github.com/0x4272616E646F6E/ailuros/internal/decision"
-	"github.com/0x4272616E646F6E/ailuros/internal/frontend"
+	"github.com/0x4272616E646F6E/decision-waf/internal/classifier"
+	"github.com/0x4272616E646F6E/decision-waf/internal/decision"
+	"github.com/0x4272616E646F6E/decision-waf/internal/frontend"
 )
 
 func TestHeaderValueReadsRawOrValue(t *testing.T) {

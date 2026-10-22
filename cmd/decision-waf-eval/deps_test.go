@@ -17,8 +17,8 @@ func TestNoServerDependencies(t *testing.T) {
 	}
 	for _, pkg := range strings.Fields(string(out)) {
 		for _, banned := range []string{
-			"github.com/0x4272616E646F6E/ailuros/internal/app",
-			"github.com/0x4272616E646F6E/ailuros/internal/frontend",
+			"github.com/0x4272616E646F6E/decision-waf/internal/app",
+			"github.com/0x4272616E646F6E/decision-waf/internal/frontend",
 			"google.golang.org/grpc",
 		} {
 			if pkg == banned || strings.HasPrefix(pkg, banned+"/") {

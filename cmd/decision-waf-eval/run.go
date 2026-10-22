@@ -14,15 +14,15 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/0x4272616E646F6E/ailuros/internal/backend"
-	"github.com/0x4272616E646F6E/ailuros/internal/classifier"
-	"github.com/0x4272616E646F6E/ailuros/internal/config"
-	"github.com/0x4272616E646F6E/ailuros/internal/eval/dataset"
-	"github.com/0x4272616E646F6E/ailuros/internal/eval/metrics"
-	"github.com/0x4272616E646F6E/ailuros/internal/eval/results"
-	"github.com/0x4272616E646F6E/ailuros/internal/eval/run"
-	"github.com/0x4272616E646F6E/ailuros/internal/policy"
-	"github.com/0x4272616E646F6E/ailuros/internal/version"
+	"github.com/0x4272616E646F6E/decision-waf/internal/backend"
+	"github.com/0x4272616E646F6E/decision-waf/internal/classifier"
+	"github.com/0x4272616E646F6E/decision-waf/internal/config"
+	"github.com/0x4272616E646F6E/decision-waf/internal/eval/dataset"
+	"github.com/0x4272616E646F6E/decision-waf/internal/eval/metrics"
+	"github.com/0x4272616E646F6E/decision-waf/internal/eval/results"
+	"github.com/0x4272616E646F6E/decision-waf/internal/eval/run"
+	"github.com/0x4272616E646F6E/decision-waf/internal/policy"
+	"github.com/0x4272616E646F6E/decision-waf/internal/version"
 )
 
 func (c cli) runCmd(ctx context.Context, args []string) (err error) {

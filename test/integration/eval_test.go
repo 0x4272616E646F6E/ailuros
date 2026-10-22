@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/0x4272616E646F6E/ailuros/internal/eval/results"
+	"github.com/0x4272616E646F6E/decision-waf/internal/eval/results"
 )
 
 func TestEvalAgainstStub(t *testing.T) {
@@ -19,7 +19,7 @@ func TestEvalAgainstStub(t *testing.T) {
 	stub := "http://" + c.port(t, "stubmodel", stubPort)
 
 	bin := filepath.Join(t.TempDir(), "ailuros-eval")
-	if out, err := exec.Command("go", "build", "-o", bin, "../../cmd/ailuros-eval").CombinedOutput(); err != nil {
+	if out, err := exec.Command("go", "build", "-o", bin, "../../cmd/decision-waf-eval").CombinedOutput(); err != nil {
 		t.Fatalf("go build: %v\n%s", err, out)
 	}
 	resultsPath := filepath.Join(t.TempDir(), "results.jsonl")

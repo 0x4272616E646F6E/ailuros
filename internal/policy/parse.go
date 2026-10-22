@@ -11,7 +11,7 @@ import (
 
 	yaml "go.yaml.in/yaml/v3"
 
-	"github.com/0x4272616E646F6E/ailuros/internal/inspect"
+	"github.com/0x4272616E646F6E/decision-waf/internal/inspect"
 )
 
 type fileMatch struct {

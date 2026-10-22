@@ -7,7 +7,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
-	"github.com/0x4272616E646F6E/ailuros/internal/classifier"
+	"github.com/0x4272616E646F6E/decision-waf/internal/classifier"
 )
 
 type Metrics struct {

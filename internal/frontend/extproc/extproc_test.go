@@ -17,11 +17,11 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/0x4272616E646F6E/ailuros/internal/classifier"
-	"github.com/0x4272616E646F6E/ailuros/internal/classifier/fake"
-	"github.com/0x4272616E646F6E/ailuros/internal/frontend/frontendtest"
-	"github.com/0x4272616E646F6E/ailuros/internal/inspect"
-	"github.com/0x4272616E646F6E/ailuros/internal/policy"
+	"github.com/0x4272616E646F6E/decision-waf/internal/classifier"
+	"github.com/0x4272616E646F6E/decision-waf/internal/classifier/fake"
+	"github.com/0x4272616E646F6E/decision-waf/internal/frontend/frontendtest"
+	"github.com/0x4272616E646F6E/decision-waf/internal/inspect"
+	"github.com/0x4272616E646F6E/decision-waf/internal/policy"
 )
 
 var (

@@ -5,7 +5,7 @@ import (
 	"log/slog"
 	"testing"
 
-	"github.com/0x4272616E646F6E/ailuros/internal/config"
+	"github.com/0x4272616E646F6E/decision-waf/internal/config"
 )
 
 func TestNew(t *testing.T) {
