@@ -45,7 +45,7 @@ func (st *stream) immediate(d decision.Decision) *extprocv3.ProcessingResponse {
 		Status:  &typev3.HttpStatus{Code: typev3.StatusCode(dn.HTTPStatus)}, //nolint:gosec // G115: Denial status codes are fixed constants (400/403/413/503, gRPC 3/7/8/14)
 		Headers: &extprocv3.HeaderMutation{SetHeaders: headers},
 		Body:    dn.Body(d.RequestID),
-		Details: "ailuros_" + string(d.Outcome),
+		Details: "decision_waf_" + string(d.Outcome),
 	}
 	if st.req != nil && st.req.GRPCContent() {
 		ir.GrpcStatus = &extprocv3.GrpcStatus{Status: uint32(dn.GRPCStatus)}

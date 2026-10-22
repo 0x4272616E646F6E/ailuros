@@ -29,7 +29,7 @@ func (fakeSnappy) Name() string                                 { return "snappy
 
 func init() { encoding.RegisterCompressor(fakeSnappy{}) }
 
-var deepEnv = map[string]string{"AILUROS_DEEP_MAX_MESSAGES": "3"}
+var deepEnv = map[string]string{"DECISION_WAF_DEEP_MAX_MESSAGES": "3"}
 
 func TestEnvoyDeep(t *testing.T) {
 	t.Parallel()
@@ -82,7 +82,7 @@ func TestEnvoyDeep(t *testing.T) {
 		}
 	})
 
-	t.Run("gRPC stream past AILUROS_DEEP_MAX_MESSAGES is cut off", func(t *testing.T) {
+	t.Run("gRPC stream past DECISION_WAF_DEEP_MAX_MESSAGES is cut off", func(t *testing.T) {
 		m := newMarker(t)
 		stream, err := echopb.Stream(grpcContext(t), s.GRPC(t))
 		if err != nil {
@@ -115,7 +115,7 @@ func TestEnvoyDeep(t *testing.T) {
 		}
 	})
 
-	failClosedWhenAilurosDown(t, s, http.StatusInternalServerError, nil)
+	failClosedWhenDecisionWafDown(t, s, http.StatusInternalServerError, nil)
 }
 
 func wantAllows(t *testing.T, ds []Decision, reasons ...string) {
@@ -132,7 +132,7 @@ func wantAllows(t *testing.T, ds []Decision, reasons ...string) {
 
 func TestEnvoyDeepOversizeBlock(t *testing.T) {
 	t.Parallel()
-	s := up(t, "envoy-deep", map[string]string{"AILUROS_DEEP_OVERSIZE": "block"})
+	s := up(t, "envoy-deep", map[string]string{"DECISION_WAF_DEEP_OVERSIZE": "block"})
 	m := newMarker(t)
 	resp := s.Send(t, "http1", Request{Method: "POST", Path: "/upload", Body: largeBody(m, 40000, "")})
 	s.WantDecision(t, wantDeny(t, resp, http.StatusRequestEntityTooLarge, "request too large"), "block", "oversize")

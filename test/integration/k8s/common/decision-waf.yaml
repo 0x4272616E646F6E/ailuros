@@ -1,25 +1,25 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ailuros
+  name: decision-waf
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: ailuros
+      app: decision-waf
   template:
     metadata:
       labels:
-        app: ailuros
+        app: decision-waf
     spec:
       automountServiceAccountToken: false
       containers:
-        - name: ailuros
+        - name: decision-waf
           env:
-            - { name: AILUROS_CLASSIFIER_BACKEND, value: jev }
-            - { name: AILUROS_CLASSIFIER_BASE_URL, value: "http://stubmodel:8080" }
-            - { name: AILUROS_CLASSIFIER_MODEL, value: stub }
-            - { name: AILUROS_CLASSIFIER_TIMEOUT, value: 1s }
+            - { name: DECISION_WAF_CLASSIFIER_BACKEND, value: jev }
+            - { name: DECISION_WAF_CLASSIFIER_BASE_URL, value: "http://stubmodel:8080" }
+            - { name: DECISION_WAF_CLASSIFIER_MODEL, value: stub }
+            - { name: DECISION_WAF_CLASSIFIER_TIMEOUT, value: 1s }
           resources:
             requests:
               cpu: 10m

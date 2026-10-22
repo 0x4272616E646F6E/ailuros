@@ -70,9 +70,9 @@ func grpcUnaryCases(t *testing.T, s *Stack) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		id := out.Fields["metadata"].GetStructValue().Fields["x-ailuros-request-id"].GetStringValue()
+		id := out.Fields["metadata"].GetStructValue().Fields["x-decision-waf-request-id"].GetStringValue()
 		if out.Fields["text"].GetStringValue() != "hello "+m || id == "" {
-			t.Fatalf("reply = %v, want the text and an x-ailuros-request-id", out)
+			t.Fatalf("reply = %v, want the text and an x-decision-waf-request-id", out)
 		}
 		d := s.WantDecision(t, id, "allow", "")
 		if d.Str("grpc_method") != "echo.v1.Echo/Unary" {
@@ -134,9 +134,9 @@ func deepStreamCases(t *testing.T, s *Stack) {
 	})
 }
 
-func failClosedWhenAilurosDown(t *testing.T, s *Stack, want int, check func(*testing.T, *Response)) {
-	t.Run("Ailuros down: requests fail closed", func(t *testing.T) {
-		s.StopAiluros(t)
+func failClosedWhenDecisionWafDown(t *testing.T, s *Stack, want int, check func(*testing.T, *Response)) {
+	t.Run("decision-waf down: requests fail closed", func(t *testing.T) {
+		s.StopDecisionWaf(t)
 		deadline := time.Now().Add(30 * time.Second)
 		var m string
 		var resp *Response
@@ -152,7 +152,7 @@ func failClosedWhenAilurosDown(t *testing.T, s *Stack, want int, check func(*tes
 				if err == nil {
 					last = fmt.Sprintf("status %d, body %s", resp.Status, resp.Body)
 				}
-				t.Fatalf("no %d within 30s after Ailuros stopped; last answer: %s", want, last)
+				t.Fatalf("no %d within 30s after decision-waf stopped; last answer: %s", want, last)
 			}
 			time.Sleep(time.Second)
 		}
@@ -207,7 +207,7 @@ func sharedCases(t *testing.T, s *Stack, proto string) {
 		s.WantDecision(t, id, "fail_closed", "upstream_5xx")
 	})
 
-	t.Run("slow model hits Ailuros's timeout before the proxy's", func(t *testing.T) {
+	t.Run("slow model hits decision-waf's timeout before the proxy's", func(t *testing.T) {
 		defer settle(t, s, proto)
 		m := newMarker(t)
 		v := echoed(t, s.Get(t, proto, "/slow/"+m+"/stub-slow", nil))
@@ -242,15 +242,15 @@ func sharedCases(t *testing.T, s *Stack, proto string) {
 			t.Fatal("baseline decision has no client_ip")
 		}
 		forged := http.Header{
-			"X-Ailuros-Request-Id": {"forged-" + m},
-			"X-Forwarded-For":      {forgedIP},
-			"X-Real-Ip":            {forgedIP},
-			"Forwarded":            {"for=" + forgedIP},
+			"X-Decision-Waf-Request-Id": {"forged-" + m},
+			"X-Forwarded-For":           {forgedIP},
+			"X-Real-Ip":                 {forgedIP},
+			"Forwarded":                 {"for=" + forgedIP},
 		}
 		v := echoed(t, s.Get(t, proto, "/forged/"+m, forged))
 		id := upstreamID(t, v)
 		if id == "forged-"+m {
-			t.Errorf("echo saw the client's X-Ailuros-Request-Id")
+			t.Errorf("echo saw the client's X-Decision-Waf-Request-Id")
 		}
 		if ip := s.Decision(t, id).Str("client_ip"); ip != peer {
 			t.Errorf("logged client_ip = %q with forged headers, want the real peer %q", ip, peer)

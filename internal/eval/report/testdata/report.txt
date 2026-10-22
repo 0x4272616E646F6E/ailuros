@@ -1,5 +1,5 @@
 dataset  fixture (eval/datasets/fixture.jsonl, sha256 aaaaaaaaaaaa, 11 requests)
-backend  jev, model d1-3b, policy default, run threshold 0.8, ailuros dev, started 2026-10-13T12:00:00Z
+backend  jev, model d1-3b, policy default, run threshold 0.8, decision-waf dev, started 2026-10-13T12:00:00Z
 threshold 0.8: 11 requests, 9 scored, 2 errors
 warning: 2 of 11 requests failed and are excluded from detection metrics (rate_limited 1, timeout 1)
 warning: only 5 benign and 4 attack requests were scored; the sweep and recommendations need at least 100 of each to be meaningful

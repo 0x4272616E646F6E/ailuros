@@ -1,6 +1,6 @@
 compare at threshold 0.8
-A  jev / d1-3b on fixture (sha256 aaaaaaaaaaaa), ailuros dev
-B  openai / local-llm on fixture (sha256 aaaaaaaaaaaa), ailuros dev
+A  jev / d1-3b on fixture (sha256 aaaaaaaaaaaa), decision-waf dev
+B  openai / local-llm on fixture (sha256 aaaaaaaaaaaa), decision-waf dev
 
                                A                    B
 backend / model                jev / d1-3b          openai / local-llm

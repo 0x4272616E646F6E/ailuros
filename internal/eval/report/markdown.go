@@ -13,13 +13,13 @@ import (
 
 func Markdown(w io.Writer, h results.Header, s metrics.Summary) error {
 	var b strings.Builder
-	b.WriteString("# ailuros-eval report\n\n| | |\n|---|---|\n")
+	b.WriteString("# decision-waf-eval report\n\n| | |\n|---|---|\n")
 	fmt.Fprintf(&b, "| Dataset | %s (`%s`, sha256 `%s`, %d requests%s) |\n",
 		md(cmp.Or(h.Dataset.Name, "unnamed")), md(h.Dataset.Path), short(h.Dataset.SHA256), h.Dataset.Entries, sampleNote(h))
 	fmt.Fprintf(&b, "| Backend | %s, model `%s`%s |\n", md(h.Backend), md(h.Model), md(serverNote(h)))
 	fmt.Fprintf(&b, "| Policy | %s |\n", md(h.Policy))
 	fmt.Fprintf(&b, "| Threshold | %s (run: %s) |\n", thr(s.Threshold), thr(h.Threshold))
-	fmt.Fprintf(&b, "| Ailuros | %s |\n", md(h.AilurosVersion))
+	fmt.Fprintf(&b, "| decision-waf | %s |\n", md(h.DecisionWafVersion))
 	fmt.Fprintf(&b, "| Started | %s |\n", h.Started.UTC().Format(time.RFC3339))
 	fmt.Fprintf(&b, "| Requests | %d (%d scored, %d errors) |\n", s.Total, s.Scored, s.Errors)
 	for _, warn := range s.Warnings {

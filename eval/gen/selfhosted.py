@@ -199,7 +199,7 @@ for user in ["admin", "root", "administrator", "test", "guest", "jsmith", "user1
 
 out = sys.argv[1]
 with open(out, "w") as f:
-    f.write(json.dumps({"ailuros_eval_dataset": 1, "name": "selfhosted-2026-10", "description": "Semi-synthetic self-hosted traffic: request shapes from common self-hosted apps, lookalike benign queries, common attack payloads and scanner probes. Headers only (lite mode)."}) + "\n")
+    f.write(json.dumps({"decision_waf_eval_dataset": 1, "name": "selfhosted-2026-10", "description": "Semi-synthetic self-hosted traffic: request shapes from common self-hosted apps, lookalike benign queries, common attack payloads and scanner probes. Headers only (lite mode)."}) + "\n")
     for r in rows:
         f.write(json.dumps(r) + "\n")
 labels = {}

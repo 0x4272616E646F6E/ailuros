@@ -1,7 +1,7 @@
 apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: SecurityPolicy
 metadata:
-  name: ailuros
+  name: decision-waf
 spec:
   targetRefs:
     - group: gateway.networking.k8s.io
@@ -13,5 +13,5 @@ spec:
     timeout: 1500ms
     grpc:
       backendRefs:
-        - name: ailuros
+        - name: decision-waf
           port: 9003

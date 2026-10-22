@@ -6,7 +6,7 @@ services:
       - ../../../deploy/traefik/dynamic.yml:/etc/traefik/dynamic.yml:ro
     ports:
       - "127.0.0.1::80"
-    depends_on: [ailuros, echo]
+    depends_on: [decision-waf, echo]
     healthcheck:
       test: ["CMD", "traefik", "healthcheck", "--ping"]
       interval: 1s

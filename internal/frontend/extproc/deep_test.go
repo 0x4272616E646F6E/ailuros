@@ -57,7 +57,7 @@ func TestDeepHTTPHoldsAndStreamsBackExactly(t *testing.T) {
 	h := newHarness(t, f, deep(1<<20, inspect.OversizeClassifyPrefix), policy.FailOpen)
 	s := h.open()
 	send(t, s, headersMsg(false, httpHeaders...))
-	streamID := mutationHeaders(t, recv(t, s))["x-ailuros-request-id"]
+	streamID := mutationHeaders(t, recv(t, s))["x-decision-waf-request-id"]
 	if !hex16.MatchString(streamID) {
 		t.Fatalf("stream request id = %q", streamID)
 	}
@@ -80,7 +80,7 @@ func TestDeepHTTPBlock(t *testing.T) {
 	h := newHarness(t, fake.Attacks(), deep(1<<20, inspect.OversizeClassifyPrefix), policy.FailOpen)
 	s := h.open()
 	send(t, s, headersMsg(false, httpHeaders...))
-	streamID := mutationHeaders(t, recv(t, s))["x-ailuros-request-id"]
+	streamID := mutationHeaders(t, recv(t, s))["x-decision-waf-request-id"]
 	send(t, s, bodyMsg([]byte("q=att"), false), bodyMsg([]byte("ack"), true))
 	if id := expectImmediate(t, recv(t, s), 403, 0, "request blocked"); id != streamID {
 		t.Errorf("denial request id = %q, want the stream id %q", id, streamID)
@@ -168,7 +168,7 @@ func TestDeepGRPCPerMessageBlockingMidStream(t *testing.T) {
 	h := newHarness(t, p.classifier(), deep(1<<20, inspect.OversizeClassifyPrefix), policy.FailOpen)
 	s := h.open()
 	send(t, s, headersMsg(false, grpcHeaders...))
-	streamID := mutationHeaders(t, recv(t, s))["x-ailuros-request-id"]
+	streamID := mutationHeaders(t, recv(t, s))["x-decision-waf-request-id"]
 	m1, m2 := grpcMsg(false, []byte("benign one")), grpcMsg(false, []byte("then an attack"))
 	send(t, s, bodyMsg(append(append([]byte{}, m1...), m2[:6]...), false))
 	if got, _ := streamed(t, s, 1); !bytes.Equal(got, m1) {
@@ -567,7 +567,7 @@ func TestDeepClassifiesHeadersBeforeContinue(t *testing.T) {
 		h := newHarness(t, f, deep(1<<20, inspect.OversizeClassifyPrefix), policy.FailOpen)
 		s := h.open()
 		send(t, s, headersMsg(false, httpHeaders...))
-		streamID := mutationHeaders(t, recv(t, s))["x-ailuros-request-id"]
+		streamID := mutationHeaders(t, recv(t, s))["x-decision-waf-request-id"]
 		if !hex16.MatchString(streamID) || f.Calls() != 1 {
 			t.Fatalf("stream id = %q, classifier calls = %d; want headers classified before CONTINUE", streamID, f.Calls())
 		}
@@ -584,7 +584,7 @@ func TestDeepClassifiesHeadersBeforeContinue(t *testing.T) {
 		h := newHarness(t, f, deep(1<<20, inspect.OversizeClassifyPrefix), policy.FailOpen)
 		s := h.open()
 		send(t, s, headersMsg(false, grpcHeaders...))
-		if id := mutationHeaders(t, recv(t, s))["x-ailuros-request-id"]; !hex16.MatchString(id) || f.Calls() != 1 {
+		if id := mutationHeaders(t, recv(t, s))["x-decision-waf-request-id"]; !hex16.MatchString(id) || f.Calls() != 1 {
 			t.Fatalf("stream id = %q, classifier calls = %d", id, f.Calls())
 		}
 		send(t, s, bodyMsg(grpcMsg(false, []byte("an attack")), true))

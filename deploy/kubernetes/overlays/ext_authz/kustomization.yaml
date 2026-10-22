@@ -8,12 +8,12 @@ patches:
       apiVersion: apps/v1
       kind: Deployment
       metadata:
-        name: ailuros
+        name: decision-waf
       spec:
         template:
           spec:
             containers:
-              - name: ailuros
+              - name: decision-waf
                 env:
-                  - { name: AILUROS_INSPECTION_MODE, value: lite }
-                  - { name: AILUROS_EXTAUTHZ_ADDR, value: ":9003" }
+                  - { name: DECISION_WAF_INSPECTION_MODE, value: lite }
+                  - { name: DECISION_WAF_EXTAUTHZ_ADDR, value: ":9003" }

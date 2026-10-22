@@ -27,7 +27,7 @@ func (st *stream) recoverFrom(msg *extprocv3.ProcessingRequest, p any) (resps []
 	defer func() {
 		if p := recover(); p != nil {
 			st.s.log.Error("panic while answering after a panic; resetting the stream", "frontend", st.src.Frontend, "panic", fmt.Sprint(p))
-			resps, done, err = nil, true, status.Error(codes.Internal, "ailuros: internal error")
+			resps, done, err = nil, true, status.Error(codes.Internal, "decision-waf: internal error")
 		}
 	}()
 	st.decisions++

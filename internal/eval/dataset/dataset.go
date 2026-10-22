@@ -25,7 +25,7 @@ const Version = 1
 const maxLine = 64 << 20
 
 type Header struct {
-	Version     int    `json:"ailuros_eval_dataset"`
+	Version     int    `json:"decision_waf_eval_dataset"`
 	Name        string `json:"name,omitempty"`
 	Description string `json:"description,omitempty"`
 }
@@ -90,7 +90,7 @@ func Read(r io.Reader, labels []string) (*Dataset, error) {
 		if !header {
 			header = true
 			if err := strictjson.Decode(text, &ds.Header); err != nil {
-				return nil, fmt.Errorf("line %d: header: %w (line 1 must be {\"ailuros_eval_dataset\": %d, ...})", n, err, Version)
+				return nil, fmt.Errorf("line %d: header: %w (line 1 must be {\"decision_waf_eval_dataset\": %d, ...})", n, err, Version)
 			}
 			if ds.Header.Version != Version {
 				return nil, fmt.Errorf("line %d: unsupported dataset version %d (want %d)", n, ds.Header.Version, Version)
@@ -119,7 +119,7 @@ func Read(r io.Reader, labels []string) (*Dataset, error) {
 		return nil, fmt.Errorf("line %d: %w", n+1, err)
 	}
 	if !header {
-		return nil, fmt.Errorf("empty dataset: line 1 must be the header {\"ailuros_eval_dataset\": %d}", Version)
+		return nil, fmt.Errorf("empty dataset: line 1 must be the header {\"decision_waf_eval_dataset\": %d}", Version)
 	}
 	if len(errs) > 0 {
 		return nil, errors.Join(errs...)

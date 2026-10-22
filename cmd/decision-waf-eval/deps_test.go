@@ -22,7 +22,7 @@ func TestNoServerDependencies(t *testing.T) {
 			"google.golang.org/grpc",
 		} {
 			if pkg == banned || strings.HasPrefix(pkg, banned+"/") {
-				t.Errorf("ailuros-eval depends on %s", pkg)
+				t.Errorf("decision-waf-eval depends on %s", pkg)
 			}
 		}
 	}

@@ -1,4 +1,4 @@
-{"ailuros_eval_dataset":1,"name":"sample","description":"Hand-written illustrative requests (10 benign, 14 attacks). Far too small to choose a threshold with."}
+{"decision_waf_eval_dataset":1,"name":"sample","description":"Hand-written illustrative requests (10 benign, 14 attacks). Far too small to choose a threshold with."}
 {"id":"b-001","label":"benign","note":"home page","method":"GET","scheme":"https","host":"shop.example.com","path":"/","tags":["path"]}
 {"id":"b-002","label":"benign","note":"catalogue query","method":"GET","scheme":"https","host":"shop.example.com","path":"/products","query":"category=shoes&page=2","tags":["query"]}
 {"id":"b-003","label":"benign","note":"SQL words in a search","method":"GET","scheme":"https","host":"shop.example.com","path":"/search","query":"q=how+to+select+a+union+representative","tags":["lookalike","query"]}

@@ -28,7 +28,7 @@ func benign() *fake.Classifier {
 }
 
 func traefik(method, uri string) *http.Request {
-	r := httptest.NewRequest("GET", "http://ailuros/", nil)
+	r := httptest.NewRequest("GET", "http://decision-waf/", nil)
 	r.Header.Set("X-Forwarded-Method", method)
 	r.Header.Set("X-Forwarded-Uri", uri)
 	r.Header.Set("X-Forwarded-Host", "app.example.com")
@@ -48,8 +48,8 @@ func TestTraefikHeadersBecomeRequest(t *testing.T) {
 	f := benign()
 	s, _ := newServer(f, policy.FailOpen, inspect.ModeLite, false)
 	rr := serve(s, traefik("POST", "/login?next=/"))
-	if rr.Code != 200 || len(rr.Header().Get("X-Ailuros-Request-Id")) != 16 {
-		t.Fatalf("status = %d, request id = %q", rr.Code, rr.Header().Get("X-Ailuros-Request-Id"))
+	if rr.Code != 200 || len(rr.Header().Get("X-Decision-Waf-Request-Id")) != 16 {
+		t.Fatalf("status = %d, request id = %q", rr.Code, rr.Header().Get("X-Decision-Waf-Request-Id"))
 	}
 	got := f.Last()
 	if got.Method != "POST" || got.Path != "/login" || got.Query != "next=/" || got.Host != "app.example.com" ||
@@ -64,7 +64,7 @@ func TestTraefikHeadersBecomeRequest(t *testing.T) {
 func TestNginxHeaders(t *testing.T) {
 	f := benign()
 	s, _ := newServer(f, policy.FailOpen, inspect.ModeLite, false)
-	r := httptest.NewRequest("GET", "http://shop.example.com/_ailuros", nil)
+	r := httptest.NewRequest("GET", "http://shop.example.com/_decision_waf", nil)
 	r.Header.Set("X-Original-Method", "GET")
 	r.Header.Set("X-Original-URI", "/search?q=x")
 	r.Header.Set("X-Real-IP", "203.0.113.4")
@@ -80,12 +80,12 @@ func TestNginxHeaders(t *testing.T) {
 func TestMissingOriginalRequestHeaders(t *testing.T) {
 	f := benign()
 	s, _ := newServer(f, policy.FailOpen, inspect.ModeLite, false)
-	rr := serve(s, httptest.NewRequest("GET", "http://ailuros/", nil))
+	rr := serve(s, httptest.NewRequest("GET", "http://decision-waf/", nil))
 	if rr.Code != http.StatusInternalServerError || f.Calls() != 0 {
 		t.Errorf("status = %d, classifier calls = %d; want 500 and no classification", rr.Code, f.Calls())
 	}
-	if id := rr.Header().Get("X-Ailuros-Request-Id"); id != "" {
-		t.Errorf("500 path set X-Ailuros-Request-Id = %q; want none", id)
+	if id := rr.Header().Get("X-Decision-Waf-Request-Id"); id != "" {
+		t.Errorf("500 path set X-Decision-Waf-Request-Id = %q; want none", id)
 	}
 	if rr.Header().Get("Content-Type") != "application/json" || rr.Body.String() != `{"error":"proxy misconfigured"}` {
 		t.Errorf("500 body = %q (%s), want the JSON error", rr.Body.String(), rr.Header().Get("Content-Type"))
@@ -150,7 +150,7 @@ func TestForgedNginxHeadersBehindTraefik(t *testing.T) {
 }
 
 func nginx(method, uri string) *http.Request {
-	r := httptest.NewRequest("GET", "http://shop.example.com/_ailuros", nil)
+	r := httptest.NewRequest("GET", "http://shop.example.com/_decision_waf", nil)
 	r.Header.Set("X-Original-Method", method)
 	r.Header.Set("X-Original-URI", uri)
 	return r
@@ -233,7 +233,7 @@ func TestFullURLHeadersConsumed(t *testing.T) {
 func TestNginxInvalidRealIPFallsThrough(t *testing.T) {
 	f := benign()
 	s, _ := newServer(f, policy.FailOpen, inspect.ModeLite, false)
-	r := httptest.NewRequest("GET", "http://shop.example.com/_ailuros", nil)
+	r := httptest.NewRequest("GET", "http://shop.example.com/_decision_waf", nil)
 	r.Header.Set("X-Original-Method", "GET")
 	r.Header.Set("X-Original-URI", "/")
 	r.Header.Set("X-Real-IP", "garbage")
@@ -264,11 +264,11 @@ func TestBlockResponse(t *testing.T) {
 	if err := json.Unmarshal(rr.Body.Bytes(), &body); err != nil {
 		t.Fatal(err)
 	}
-	if body["error"] != "request blocked" || body["request_id"] != rr.Header().Get("X-Ailuros-Request-Id") {
+	if body["error"] != "request blocked" || body["request_id"] != rr.Header().Get("X-Decision-Waf-Request-Id") {
 		t.Errorf("body = %v", body)
 	}
-	if strings.Contains(rr.Body.String(), "sqli") || rr.Header().Get("X-Ailuros-Decision") != "" {
-		t.Error("category leaked to client without AILUROS_EXPOSE_VERDICT")
+	if strings.Contains(rr.Body.String(), "sqli") || rr.Header().Get("X-Decision-Waf-Decision") != "" {
+		t.Error("category leaked to client without DECISION_WAF_EXPOSE_VERDICT")
 	}
 }
 
@@ -288,8 +288,8 @@ func TestFailureModes(t *testing.T) {
 func TestExposeVerdict(t *testing.T) {
 	s, _ := newServer(fake.Returning(classifier.Verdict{Benign: 0.045, Category: "sqli", Confidence: 0.576}), policy.FailOpen, inspect.ModeLite, true)
 	rr := serve(s, traefik("GET", "/"))
-	if got := rr.Header().Get("X-Ailuros-Decision"); got != "block; attack_score=0.955; category=sqli; confidence=0.576" {
-		t.Errorf("X-Ailuros-Decision = %q", got)
+	if got := rr.Header().Get("X-Decision-Waf-Decision"); got != "block; attack_score=0.955; category=sqli; confidence=0.576" {
+		t.Errorf("X-Decision-Waf-Decision = %q", got)
 	}
 }
 
@@ -335,8 +335,8 @@ func TestPanicDuringRecoveryAnswersWithFailureMode(t *testing.T) {
 				}()
 				rr = serve(s, traefik("GET", "/home"))
 			}()
-			if rr.Code != c.status || len(rr.Header().Get("X-Ailuros-Request-Id")) != 16 {
-				t.Errorf("status = %d, request id %q; want %d with a request ID", rr.Code, rr.Header().Get("X-Ailuros-Request-Id"), c.status)
+			if rr.Code != c.status || len(rr.Header().Get("X-Decision-Waf-Request-Id")) != 16 {
+				t.Errorf("status = %d, request id %q; want %d with a request ID", rr.Code, rr.Header().Get("X-Decision-Waf-Request-Id"), c.status)
 			}
 		})
 	}
@@ -356,7 +356,7 @@ func TestClientIPFromForwardedHopWithPort(t *testing.T) {
 func TestClientIPFromXRealIPWithPort(t *testing.T) {
 	f := benign()
 	s, _ := newServer(f, policy.FailOpen, inspect.ModeLite, false)
-	r := httptest.NewRequest("GET", "http://ailuros/", nil)
+	r := httptest.NewRequest("GET", "http://decision-waf/", nil)
 	r.Header.Set("X-Original-Method", "GET")
 	r.Header.Set("X-Original-Uri", "/")
 	r.Header.Set("X-Real-Ip", "198.51.100.7:8080")

@@ -1,21 +1,21 @@
-name: ailuros-it
+name: decision-waf-it
 
 services:
-  ailuros:
-    image: ailuros-it/ailuros:dev
+  decision-waf:
+    image: decision-waf-it/decision-waf:dev
     build: { context: ../../.., dockerfile: Dockerfile }
     environment:
-      AILUROS_CLASSIFIER_BACKEND: ${AILUROS_CLASSIFIER_BACKEND:-jev}
-      AILUROS_CLASSIFIER_BASE_URL: ${AILUROS_CLASSIFIER_BASE_URL:-http://stubmodel:8080}
-      AILUROS_CLASSIFIER_MODEL: ${AILUROS_CLASSIFIER_MODEL:-stub}
-      AILUROS_CLASSIFIER_API_KEY: ${AILUROS_CLASSIFIER_API_KEY:-}
-      AILUROS_CLASSIFIER_TIMEOUT: ${AILUROS_CLASSIFIER_TIMEOUT:-1s}
-      AILUROS_INSPECTION_MODE: ${AILUROS_INSPECTION_MODE:-lite}
-      AILUROS_FAILURE_MODE:
-      AILUROS_DEEP_OVERSIZE:
-      AILUROS_DEEP_MAX_MESSAGES:
-      AILUROS_EXTAUTHZ_ADDR:
-      AILUROS_POLICY_FILE: /policy.yaml
+      DECISION_WAF_CLASSIFIER_BACKEND: ${DECISION_WAF_CLASSIFIER_BACKEND:-jev}
+      DECISION_WAF_CLASSIFIER_BASE_URL: ${DECISION_WAF_CLASSIFIER_BASE_URL:-http://stubmodel:8080}
+      DECISION_WAF_CLASSIFIER_MODEL: ${DECISION_WAF_CLASSIFIER_MODEL:-stub}
+      DECISION_WAF_CLASSIFIER_API_KEY: ${DECISION_WAF_CLASSIFIER_API_KEY:-}
+      DECISION_WAF_CLASSIFIER_TIMEOUT: ${DECISION_WAF_CLASSIFIER_TIMEOUT:-1s}
+      DECISION_WAF_INSPECTION_MODE: ${DECISION_WAF_INSPECTION_MODE:-lite}
+      DECISION_WAF_FAILURE_MODE:
+      DECISION_WAF_DEEP_OVERSIZE:
+      DECISION_WAF_DEEP_MAX_MESSAGES:
+      DECISION_WAF_EXTAUTHZ_ADDR:
+      DECISION_WAF_POLICY_FILE: /policy.yaml
     volumes:
       - ../k8s/common/policy.yaml:/policy.yaml:ro
     ports:
@@ -26,7 +26,7 @@ services:
       stubmodel: { condition: service_healthy }
 
   stubmodel:
-    image: ailuros-it/stubmodel:dev
+    image: decision-waf-it/stubmodel:dev
     build: { context: ../../.., dockerfile: test/integration/Dockerfile, target: stubmodel }
     ports:
       - "127.0.0.1::8080"
@@ -37,7 +37,7 @@ services:
       retries: 30
 
   echo:
-    image: ailuros-it/echo:dev
+    image: decision-waf-it/echo:dev
     build: { context: ../../.., dockerfile: test/integration/Dockerfile, target: echo }
     networks:
       default:

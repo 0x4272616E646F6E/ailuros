@@ -17,7 +17,7 @@ import (
 	"github.com/0x4272616E646F6E/decision-waf/internal/inspect"
 )
 
-var source = decision.Source{Frontend: "ailuros-eval", Mode: inspect.ModeStandard}
+var source = decision.Source{Frontend: "decision-waf-eval", Mode: inspect.ModeStandard}
 
 func NewBreaker() *classifier.Breaker {
 	return classifier.NewBreaker(classifier.BreakerSettings{MinCalls: math.MaxInt, Ratio: 1, Window: time.Hour, Cooldown: time.Hour}, time.Now)

@@ -5,13 +5,13 @@ resources:
   - echo.yaml
   - gateway.yaml
 images:
-  - name: ailuros
-    newName: ailuros-it/ailuros
+  - name: decision-waf
+    newName: decision-waf-it/decision-waf
     newTag: dev
 patches:
-  - path: ailuros.yaml
+  - path: decision-waf.yaml
 configMapGenerator:
-  - name: ailuros-policy
+  - name: decision-waf-policy
     behavior: replace
     files: [policy.yaml]
     options: { disableNameSuffixHash: true }

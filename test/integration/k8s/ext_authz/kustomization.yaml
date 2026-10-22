@@ -1,6 +1,6 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-namespace: ailuros-ext-authz
+namespace: decision-waf-ext-authz
 resources:
   - ../../../../deploy/kubernetes/overlays/ext_authz
 components:

@@ -5,18 +5,18 @@ patches:
       apiVersion: apps/v1
       kind: Deployment
       metadata:
-        name: ailuros
+        name: decision-waf
       spec:
         template:
           spec:
             containers:
-              - name: ailuros
+              - name: decision-waf
                 env:
-                  - { name: AILUROS_CLASSIFIER_API_KEY_FILE, value: /etc/ailuros-secret/api-key }
+                  - { name: DECISION_WAF_CLASSIFIER_API_KEY_FILE, value: /etc/decision-waf-secret/api-key }
                 volumeMounts:
-                  - { name: classifier-secret, mountPath: /etc/ailuros-secret, readOnly: true }
-  - target: { kind: Deployment, name: ailuros }
+                  - { name: classifier-secret, mountPath: /etc/decision-waf-secret, readOnly: true }
+  - target: { kind: Deployment, name: decision-waf }
     patch: |-
       - op: add
         path: /spec/template/spec/volumes/-
-        value: { name: classifier-secret, secret: { secretName: ailuros-classifier } }
+        value: { name: classifier-secret, secret: { secretName: decision-waf-classifier } }

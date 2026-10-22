@@ -82,14 +82,14 @@ func TestEchoServesGRPCOnTheHTTPPort(t *testing.T) {
 	defer conn.Close()
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	ctx = metadata.AppendToOutgoingContext(ctx, "x-ailuros-request-id", "rid-1")
+	ctx = metadata.AppendToOutgoingContext(ctx, "x-decision-waf-request-id", "rid-1")
 
 	out, err := echopb.Unary(ctx, conn, &echopb.Msg{Value: "unary-m3"}, grpc.UseCompressor(gzip.Name))
 	if err != nil {
 		t.Fatal(err)
 	}
 	if out.Fields["text"].GetStringValue() != "unary-m3" ||
-		out.Fields["metadata"].GetStructValue().Fields["x-ailuros-request-id"].GetStringValue() != "rid-1" {
+		out.Fields["metadata"].GetStructValue().Fields["x-decision-waf-request-id"].GetStringValue() != "rid-1" {
 		t.Errorf("Unary reply = %v", out)
 	}
 

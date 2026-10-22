@@ -8,16 +8,16 @@ import (
 	"testing"
 )
 
-func TestComposeEnvDropsAilurosVariables(t *testing.T) {
-	t.Setenv("AILUROS_INSPECTION_MODE", "standard")
+func TestComposeEnvDropsDecisionWafVariables(t *testing.T) {
+	t.Setenv("DECISION_WAF_INSPECTION_MODE", "standard")
 	t.Setenv("IT_UNRELATED", "kept")
-	env := composeEnv(map[string]string{"AILUROS_DEEP_OVERSIZE": "block"})
+	env := composeEnv(map[string]string{"DECISION_WAF_DEEP_OVERSIZE": "block"})
 	for _, kv := range env {
-		if strings.HasPrefix(kv, "AILUROS_") && kv != "AILUROS_DEEP_OVERSIZE=block" {
+		if strings.HasPrefix(kv, "DECISION_WAF_") && kv != "DECISION_WAF_DEEP_OVERSIZE=block" {
 			t.Errorf("compose env leaks %q", kv)
 		}
 	}
-	if !slices.Contains(env, "AILUROS_DEEP_OVERSIZE=block") || !slices.Contains(env, "IT_UNRELATED=kept") {
+	if !slices.Contains(env, "DECISION_WAF_DEEP_OVERSIZE=block") || !slices.Contains(env, "IT_UNRELATED=kept") {
 		t.Errorf("compose env = %q, want the override and unrelated variables", env)
 	}
 }
@@ -41,13 +41,13 @@ func TestComposeEnvDropsEnvoyLiteConfig(t *testing.T) {
 }
 
 func TestProjectNameIsPerEnv(t *testing.T) {
-	if got := projectName("nginx", nil); got != "ailuros-it-nginx" {
+	if got := projectName("nginx", nil); got != "decision-waf-it-nginx" {
 		t.Errorf("projectName(nginx, nil) = %q", got)
 	}
-	a := projectName("envoy-deep", map[string]string{"AILUROS_DEEP_OVERSIZE": "block", "AILUROS_DEEP_MAX_MESSAGES": "3"})
-	b := projectName("envoy-deep", map[string]string{"AILUROS_DEEP_MAX_MESSAGES": "3", "AILUROS_DEEP_OVERSIZE": "block"})
-	c := projectName("envoy-deep", map[string]string{"AILUROS_DEEP_OVERSIZE": "allow"})
-	if a != b || a == c || !strings.HasPrefix(a, "ailuros-it-envoy-deep-") || len(a) != len("ailuros-it-envoy-deep-")+6 {
+	a := projectName("envoy-deep", map[string]string{"DECISION_WAF_DEEP_OVERSIZE": "block", "DECISION_WAF_DEEP_MAX_MESSAGES": "3"})
+	b := projectName("envoy-deep", map[string]string{"DECISION_WAF_DEEP_MAX_MESSAGES": "3", "DECISION_WAF_DEEP_OVERSIZE": "block"})
+	c := projectName("envoy-deep", map[string]string{"DECISION_WAF_DEEP_OVERSIZE": "allow"})
+	if a != b || a == c || !strings.HasPrefix(a, "decision-waf-it-envoy-deep-") || len(a) != len("decision-waf-it-envoy-deep-")+6 {
 		t.Errorf("project names a=%q b=%q c=%q, want a == b != c with a 6-character suffix", a, b, c)
 	}
 }

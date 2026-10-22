@@ -1,16 +1,16 @@
 http:
   middlewares:
-    ailuros:
+    decision-waf:
       forwardAuth:
-        address: http://ailuros:9002/
+        address: http://decision-waf:9002/
         trustForwardHeader: false
         authResponseHeaders:
-          - X-Ailuros-Request-Id
+          - X-Decision-Waf-Request-Id
   routers:
     app:
       rule: Host(`app.example.com`)
       service: app
-      middlewares: [ailuros]
+      middlewares: [decision-waf]
   services:
     app:
       loadBalancer:

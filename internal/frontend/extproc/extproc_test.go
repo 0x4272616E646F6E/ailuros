@@ -37,8 +37,8 @@ func TestLiteAllowAddsRequestID(t *testing.T) {
 		"source.address": "203.0.113.9:51234", "connection.requested_server_name": "shop.example.com", "connection.tls_version": "TLSv1.3", "request.protocol": "HTTP/2",
 	}))
 	got := mutationHeaders(t, recv(t, s))
-	if !hex16.MatchString(got["x-ailuros-request-id"]) || len(got) != 1 {
-		t.Errorf("header mutation = %v, want only x-ailuros-request-id", got)
+	if !hex16.MatchString(got["x-decision-waf-request-id"]) || len(got) != 1 {
+		t.Errorf("header mutation = %v, want only x-decision-waf-request-id", got)
 	}
 	r := f.Last()
 	if r.Method != "POST" || r.Scheme != "https" || r.Host != "shop.example.com" || r.Path != "/api/cart" || r.Query != "id=7" ||
@@ -49,7 +49,7 @@ func TestLiteAllowAddsRequestID(t *testing.T) {
 	if _, ok := r.Headers[":path"]; ok {
 		t.Error("pseudo-header passed to the classifier as a header")
 	}
-	if d := h.obs.All(); len(d) != 1 || d[0].RequestID != got["x-ailuros-request-id"] || d[0].Source.Frontend != "extproc" {
+	if d := h.obs.All(); len(d) != 1 || d[0].RequestID != got["x-decision-waf-request-id"] || d[0].Source.Frontend != "extproc" {
 		t.Errorf("decisions = %+v", d)
 	}
 }
@@ -113,7 +113,7 @@ func TestLiteFailOpenContinues(t *testing.T) {
 	h := newHarness(t, fake.Failing(errors.New("down")), lite, policy.FailOpen)
 	s := h.open()
 	send(t, s, headersMsg(false, httpHeaders...))
-	if got := mutationHeaders(t, recv(t, s)); !hex16.MatchString(got["x-ailuros-request-id"]) {
+	if got := mutationHeaders(t, recv(t, s)); !hex16.MatchString(got["x-decision-waf-request-id"]) {
 		t.Errorf("header mutation = %v", got)
 	}
 }
@@ -124,8 +124,8 @@ func TestExposeVerdictHeader(t *testing.T) {
 	h := newHarness(t, fake.Returning(classifier.Verdict{Benign: 0.97, Category: "sqli", Confidence: 0.02}), cfg, policy.FailOpen)
 	s := h.open()
 	send(t, s, headersMsg(false, httpHeaders...))
-	if got := mutationHeaders(t, recv(t, s))["x-ailuros-decision"]; got != "allow; attack_score=0.030; category=sqli; confidence=0.020" {
-		t.Errorf("x-ailuros-decision = %q", got)
+	if got := mutationHeaders(t, recv(t, s))["x-decision-waf-decision"]; got != "allow; attack_score=0.030; category=sqli; confidence=0.020" {
+		t.Errorf("x-decision-waf-decision = %q", got)
 	}
 }
 
@@ -155,7 +155,7 @@ func TestStandardClassifiesBufferedBody(t *testing.T) {
 	}
 	send(t, s, bodyMsg([]byte(`{"item":1}`), true))
 	got := mutationHeaders(t, recv(t, s))
-	if !hex16.MatchString(got["x-ailuros-request-id"]) {
+	if !hex16.MatchString(got["x-decision-waf-request-id"]) {
 		t.Errorf("body response mutation = %v", got)
 	}
 	if r := f.Last(); string(r.Body) != `{"item":1}` || r.BodyTruncated || f.Calls() != 1 {
@@ -205,7 +205,7 @@ func TestStandardHeadersOnlyRequest(t *testing.T) {
 	h := newHarness(t, f, standard, policy.FailOpen)
 	s := h.open()
 	send(t, s, headersMsg(true, ":method", "GET", ":path", "/", ":authority", "a"))
-	if got := mutationHeaders(t, recv(t, s)); !hex16.MatchString(got["x-ailuros-request-id"]) || f.Calls() != 1 {
+	if got := mutationHeaders(t, recv(t, s)); !hex16.MatchString(got["x-decision-waf-request-id"]) || f.Calls() != 1 {
 		t.Errorf("mutation = %v, calls = %d; want a decision on headers", got, f.Calls())
 	}
 	if h.downgrades.Load() != 0 {
@@ -234,7 +234,7 @@ func TestModeMismatchDowngrades(t *testing.T) {
 			h := newHarness(t, f, c.cfg, policy.FailOpen)
 			s := h.open()
 			send(t, s, c.msg)
-			if got := mutationHeaders(t, recv(t, s)); !hex16.MatchString(got["x-ailuros-request-id"]) || f.Calls() != 1 {
+			if got := mutationHeaders(t, recv(t, s)); !hex16.MatchString(got["x-decision-waf-request-id"]) || f.Calls() != 1 {
 				t.Errorf("mutation = %v, calls = %d; want a headers-only decision", got, f.Calls())
 			}
 			if h.downgrades.Load() != 1 {
@@ -388,7 +388,7 @@ func TestPanicFollowsFailureMode(t *testing.T) {
 			r := recv(t, s)
 			if c.closed {
 				expectImmediate(t, r, 503, 0, "service unavailable")
-			} else if got := mutationHeaders(t, r); !hex16.MatchString(got["x-ailuros-request-id"]) {
+			} else if got := mutationHeaders(t, r); !hex16.MatchString(got["x-decision-waf-request-id"]) {
 				t.Errorf("fail_open mutation = %v", got)
 			}
 			if d := h.obs.All(); len(d) != 1 || d[0].Reason != classifier.ReasonPanic {
@@ -410,7 +410,7 @@ func TestPanicDuringRecoveryClosedAnswersStatically(t *testing.T) {
 	h.obs.PanicAlways.Store(false)
 	s2 := h.open()
 	send(t, s2, headersMsg(false, httpHeaders...))
-	if got := mutationHeaders(t, recv(t, s2)); !hex16.MatchString(got["x-ailuros-request-id"]) {
+	if got := mutationHeaders(t, recv(t, s2)); !hex16.MatchString(got["x-decision-waf-request-id"]) {
 		t.Errorf("mutation = %v", got)
 	}
 }
@@ -427,8 +427,8 @@ func TestPanicDuringRecoveryOpenLetsRequestThrough(t *testing.T) {
 	if r.GetRequestHeaders() == nil {
 		t.Fatalf("response = %v, want a request-headers continue", r)
 	}
-	if got := mutationHeaders(t, r); !hex16.MatchString(got["x-ailuros-request-id"]) {
-		t.Errorf("fail_open mutation = %v, want an x-ailuros-request-id", got)
+	if got := mutationHeaders(t, r); !hex16.MatchString(got["x-decision-waf-request-id"]) {
+		t.Errorf("fail_open mutation = %v, want an x-decision-waf-request-id", got)
 	}
 	h.obs.PanicAlways.Store(false)
 	s2 := h.open()
@@ -542,7 +542,7 @@ func TestJA4Header(t *testing.T) {
 		name, header, want string
 		kept               bool
 	}{
-		{"on", "x-ailuros-ja4", fp, false},
+		{"on", "x-decision-waf-ja4", fp, false},
 		{"off", "", "", true},
 	} {
 		f := fake.Attacks()
@@ -550,10 +550,10 @@ func TestJA4Header(t *testing.T) {
 		cfg.JA4Header = c.header
 		h := newHarness(t, f, cfg, policy.FailOpen)
 		s := h.open()
-		send(t, s, headersMsg(false, with(httpHeaders, "x-ailuros-ja4", fp)...))
+		send(t, s, headersMsg(false, with(httpHeaders, "x-decision-waf-ja4", fp)...))
 		recv(t, s)
 		r := f.Last()
-		if _, kept := r.Headers["x-ailuros-ja4"]; r.JA4 != c.want || kept != c.kept {
+		if _, kept := r.Headers["x-decision-waf-ja4"]; r.JA4 != c.want || kept != c.kept {
 			t.Errorf("%s: JA4 %q, header kept %v", c.name, r.JA4, kept)
 		}
 	}
@@ -567,7 +567,7 @@ func TestWebSocketHandshakeDecidedOnHeaders(t *testing.T) {
 			s := h.open()
 			send(t, s, headersMsg(false, ":method", "GET", ":path", "/ws", ":authority", "a.example",
 				"upgrade", "websocket", "connection", "Upgrade", "sec-websocket-version", "13", "sec-websocket-key", "websocket-test-key"))
-			if got := mutationHeaders(t, recv(t, s)); !hex16.MatchString(got["x-ailuros-request-id"]) || f.Calls() != 1 {
+			if got := mutationHeaders(t, recv(t, s)); !hex16.MatchString(got["x-decision-waf-request-id"]) || f.Calls() != 1 {
 				t.Errorf("mutation = %v, calls = %d; want a decision on the headers alone", got, f.Calls())
 			}
 		})

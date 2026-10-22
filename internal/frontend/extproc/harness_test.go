@@ -168,7 +168,7 @@ func expectImmediate(t *testing.T, r *extprocv3.ProcessingResponse, httpStatus i
 	if err := json.Unmarshal(ir.GetBody(), &body); err != nil {
 		t.Fatalf("body %q: %v", ir.GetBody(), err)
 	}
-	id := headers["x-ailuros-request-id"]
+	id := headers["x-decision-waf-request-id"]
 	if !hex16.MatchString(id) || body["request_id"] != id || body["error"] != msg || headers["content-type"] != "application/json" {
 		t.Errorf("headers = %v, body = %v; want error %q with matching request id", headers, body, msg)
 	}

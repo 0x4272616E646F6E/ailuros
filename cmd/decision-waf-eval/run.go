@@ -73,8 +73,8 @@ func (c cli) runCmd(ctx context.Context, args []string) (err error) {
 		Backend: cfg.Backend, BaseURL: withoutUserinfo(cfg.BaseURL), Model: cfg.Model, TimeoutMS: cfg.Timeout.Milliseconds(),
 		Threshold: cfg.BlockThreshold,
 		Policy:    cmp.Or(cfg.PolicyFile, "default"), PolicySHA256: policySHA, BodyMaxBytes: cfg.BodyMaxBytes,
-		PromptVersion:  classifier.PromptVersion,
-		AilurosVersion: version.Version, Started: c.now().UTC(),
+		PromptVersion:      classifier.PromptVersion,
+		DecisionWafVersion: version.Version, Started: c.now().UTC(),
 	}
 	if len(entries) < len(ds.Entries) {
 		h.Sample, h.Seed = len(entries), *seed
@@ -136,7 +136,7 @@ func (c cli) runCmd(ctx context.Context, args []string) (err error) {
 	}
 	if rf, err := results.ReadFile(path); err == nil {
 		if s := metrics.Summarize(rf, metrics.Options{}); s.Errors > 0 {
-			fmt.Fprintf(c.stderr, "%d of %d requests failed (%s); see ailuros-eval report\n", s.Errors, s.Total, metrics.Reasons(s.ErrorsByReason))
+			fmt.Fprintf(c.stderr, "%d of %d requests failed (%s); see decision-waf-eval report\n", s.Errors, s.Total, metrics.Reasons(s.ErrorsByReason))
 		}
 	}
 	_, err = fmt.Fprintln(c.stdout, path)
@@ -163,7 +163,7 @@ func checkResults(path string, h results.Header, resume bool) (existing *results
 	case !resume:
 		return nil, invalidError{fmt.Errorf("%s already exists; pass --resume to continue it or choose another --out", path)}
 	case !existing.Header.SameRun(h):
-		return nil, invalidError{fmt.Errorf("%s was produced by a different run (dataset, backend, model server, model, classifier timeout, threshold, policy, body limit, prompt version, sample, seed, or Ailuros version differ); choose another --out", path)}
+		return nil, invalidError{fmt.Errorf("%s was produced by a different run (dataset, backend, model server, model, classifier timeout, threshold, policy, body limit, prompt version, sample, seed, or decision-waf version differ); choose another --out", path)}
 	}
 	return existing, nil
 }

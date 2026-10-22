@@ -39,7 +39,7 @@ var proxies = map[string]composeProxy{
 
 func TestMain(m *testing.M) {
 	flag.Parse()
-	cmd := exec.Command("docker", "compose", "-p", "ailuros-it", "-f", filepath.Join(composeDir, "common.yaml"), "build")
+	cmd := exec.Command("docker", "compose", "-p", "decision-waf-it", "-f", filepath.Join(composeDir, "common.yaml"), "build")
 	cmd.Env = composeEnv(nil)
 	if out, err := cmd.CombinedOutput(); err != nil {
 		fmt.Fprintf(os.Stderr, "docker compose build: %v\n%s", err, out)
@@ -50,7 +50,7 @@ func TestMain(m *testing.M) {
 
 func composeEnv(overrides map[string]string) []string {
 	env := slices.DeleteFunc(os.Environ(), func(kv string) bool {
-		return strings.HasPrefix(kv, "AILUROS_") || strings.HasPrefix(kv, "ENVOY_LITE_CONFIG=")
+		return strings.HasPrefix(kv, "DECISION_WAF_") || strings.HasPrefix(kv, "ENVOY_LITE_CONFIG=")
 	})
 	for _, k := range slices.Sorted(maps.Keys(overrides)) {
 		env = append(env, k+"="+overrides[k])
@@ -59,7 +59,7 @@ func composeEnv(overrides map[string]string) []string {
 }
 
 func projectName(name string, env map[string]string) string {
-	project := "ailuros-it-" + name
+	project := "decision-waf-it-" + name
 	if len(env) > 0 {
 		h := sha256.New()
 		for _, k := range slices.Sorted(maps.Keys(env)) {
@@ -86,7 +86,7 @@ func up(t *testing.T, name string, env map[string]string) *Stack {
 	s.ProxyAddr = c.port(t, p.service, p.port)
 	s.stubURL = "http://" + c.port(t, "stubmodel", stubPort)
 	s.echoURL = "http://" + c.port(t, "echo", echoAdminPort)
-	s.adminURL = "http://" + c.port(t, "ailuros", ailurosAdminPort)
+	s.adminURL = "http://" + c.port(t, "decision-waf", decisionWafAdminPort)
 	s.waitReady(t)
 	return s
 }
@@ -133,7 +133,7 @@ func startProject(t *testing.T, s *Stack, c *composeEnvironment, services ...str
 	}
 }
 
-const extraLabel = "ailuros-it.project"
+const extraLabel = "decision-waf-it.project"
 
 type composeEnvironment struct {
 	project string
@@ -167,17 +167,17 @@ func (c *composeEnvironment) port(t *testing.T, service string, port int) string
 	return strings.TrimSpace(string(out))
 }
 
-func (c *composeEnvironment) ailurosLogs() ([]byte, error) {
-	out, err := c.run("logs", "--no-color", "--no-log-prefix", "ailuros")
+func (c *composeEnvironment) decisionWafLogs() ([]byte, error) {
+	out, err := c.run("logs", "--no-color", "--no-log-prefix", "decision-waf")
 	if err != nil {
 		return nil, fmt.Errorf("compose logs: %w\n%s", err, out)
 	}
 	return out, nil
 }
 
-func (c *composeEnvironment) stopAiluros() error {
-	if out, err := c.run("stop", "ailuros"); err != nil {
-		return fmt.Errorf("compose stop ailuros: %w\n%s", err, out)
+func (c *composeEnvironment) stopDecisionWaf() error {
+	if out, err := c.run("stop", "decision-waf"); err != nil {
+		return fmt.Errorf("compose stop decision-waf: %w\n%s", err, out)
 	}
 	return nil
 }

@@ -17,7 +17,7 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	if err := run(ctx); err != nil {
-		fmt.Fprintf(os.Stderr, "ailuros: %v\n", err)
+		fmt.Fprintf(os.Stderr, "decision-waf: %v\n", err)
 		os.Exit(1)
 	}
 }

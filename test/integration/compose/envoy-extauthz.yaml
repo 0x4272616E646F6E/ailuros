@@ -1,8 +1,8 @@
 services:
-  ailuros:
+  decision-waf:
     environment:
-      AILUROS_INSPECTION_MODE: ${AILUROS_INSPECTION_MODE:-lite}
-      AILUROS_EXTAUTHZ_ADDR: ":9003"
+      DECISION_WAF_INSPECTION_MODE: ${DECISION_WAF_INSPECTION_MODE:-lite}
+      DECISION_WAF_EXTAUTHZ_ADDR: ":9003"
 
   envoy:
     extends: { file: envoy-common.yaml, service: envoy }

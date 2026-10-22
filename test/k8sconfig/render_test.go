@@ -109,12 +109,12 @@ func TestOverlays(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.overlay, func(t *testing.T) {
 			objs := render(t, filepath.Join("overlays", c.overlay))
-			d := find(t, objs, "Deployment", "ailuros")
-			if got := env(t, d, "AILUROS_INSPECTION_MODE"); got != c.mode {
-				t.Errorf("AILUROS_INSPECTION_MODE = %v, want %s", got, c.mode)
+			d := find(t, objs, "Deployment", "decision-waf")
+			if got := env(t, d, "DECISION_WAF_INSPECTION_MODE"); got != c.mode {
+				t.Errorf("DECISION_WAF_INSPECTION_MODE = %v, want %s", got, c.mode)
 			}
-			if got := env(t, d, "AILUROS_POLICY_FILE"); got != "/etc/ailuros/policy.yaml" {
-				t.Errorf("AILUROS_POLICY_FILE = %v", got)
+			if got := env(t, d, "DECISION_WAF_POLICY_FILE"); got != "/etc/decision-waf/policy.yaml" {
+				t.Errorf("DECISION_WAF_POLICY_FILE = %v", got)
 			}
 			sc := get(d, "spec", "template", "spec", "containers", 0, "securityContext")
 			if get(sc, "readOnlyRootFilesystem") != true || get(sc, "allowPrivilegeEscalation") != false {
@@ -132,29 +132,29 @@ func TestOverlays(t *testing.T) {
 			ts := get(podSpec, "topologySpreadConstraints", 0)
 			if get(ts, "maxSkew") != 1 || get(ts, "topologyKey") != "kubernetes.io/hostname" ||
 				get(ts, "whenUnsatisfiable") != "ScheduleAnyway" ||
-				get(ts, "labelSelector", "matchLabels", "app.kubernetes.io/name") != "ailuros" {
+				get(ts, "labelSelector", "matchLabels", "app.kubernetes.io/name") != "decision-waf" {
 				t.Errorf("topologySpreadConstraints[0] = %v", ts)
 			}
-			if got := get(find(t, objs, "Service", "ailuros"), "spec", "selector", "app.kubernetes.io/name"); got != "ailuros" {
-				t.Errorf("Service selects %v, want app.kubernetes.io/name: ailuros", got)
+			if got := get(find(t, objs, "Service", "decision-waf"), "spec", "selector", "app.kubernetes.io/name"); got != "decision-waf" {
+				t.Errorf("Service selects %v, want app.kubernetes.io/name: decision-waf", got)
 			}
-			if got := get(find(t, objs, "PodDisruptionBudget", "ailuros"), "spec", "selector", "matchLabels", "app.kubernetes.io/name"); got != "ailuros" {
-				t.Errorf("PodDisruptionBudget selects %v, want app.kubernetes.io/name: ailuros", got)
+			if got := get(find(t, objs, "PodDisruptionBudget", "decision-waf"), "spec", "selector", "matchLabels", "app.kubernetes.io/name"); got != "decision-waf" {
+				t.Errorf("PodDisruptionBudget selects %v, want app.kubernetes.io/name: decision-waf", got)
 			}
-			p := find(t, objs, c.kind, "ailuros")
+			p := find(t, objs, c.kind, "decision-waf")
 			if got := get(p, "spec", "targetRefs", 0, "name"); got != "eg" {
 				t.Errorf("policy targets %v, want Gateway eg", got)
 			}
 			if c.kind == "SecurityPolicy" {
 				ea := get(p, "spec", "extAuth")
-				if env(t, d, "AILUROS_EXTAUTHZ_ADDR") != config.ConventionalExtAuthzAddr || get(ea, "grpc", "backendRefs", 0, "port") != portOf(config.ConventionalExtAuthzAddr) ||
+				if env(t, d, "DECISION_WAF_EXTAUTHZ_ADDR") != config.ConventionalExtAuthzAddr || get(ea, "grpc", "backendRefs", 0, "port") != portOf(config.ConventionalExtAuthzAddr) ||
 					get(ea, "failOpen") != false || get(ea, "timeout") != proxyTimeoutMS || get(ea, "statusOnError") != 503 {
-					t.Errorf("extAuth = %v (extauthz addr %v)", ea, env(t, d, "AILUROS_EXTAUTHZ_ADDR"))
+					t.Errorf("extAuth = %v (extauthz addr %v)", ea, env(t, d, "DECISION_WAF_EXTAUTHZ_ADDR"))
 				}
 				return
 			}
 			ep := get(p, "spec", "extProc", 0)
-			if get(ep, "backendRefs", 0, "name") != "ailuros" || get(ep, "backendRefs", 0, "port") != portOf(config.DefaultExtProcAddr) ||
+			if get(ep, "backendRefs", 0, "name") != "decision-waf" || get(ep, "backendRefs", 0, "port") != portOf(config.DefaultExtProcAddr) ||
 				get(ep, "messageTimeout") != proxyTimeoutMS || get(ep, "failOpen") != false {
 				t.Errorf("extProc = %v", ep)
 			}
@@ -167,11 +167,11 @@ func TestOverlays(t *testing.T) {
 				t.Errorf("request attributes = %v, want %v (extproc.RequestAttributes)", got, extproc.RequestAttributes)
 			}
 			if c.overlay == "deep" {
-				b := find(t, objs, "BackendTrafficPolicy", "ailuros-deep-timeouts")
+				b := find(t, objs, "BackendTrafficPolicy", "decision-waf-deep-timeouts")
 				if get(b, "spec", "timeout", "http", "streamIdleTimeout") != "30s" || get(b, "spec", "timeout", "http", "requestTimeout") != nil {
 					t.Errorf("deep backend timeouts = %v, want streamIdleTimeout 30s and no requestTimeout", get(b, "spec", "timeout"))
 				}
-				ctp := find(t, objs, "ClientTrafficPolicy", "ailuros-deep-client-timeouts")
+				ctp := find(t, objs, "ClientTrafficPolicy", "decision-waf-deep-client-timeouts")
 				if get(ctp, "spec", "timeout", "http", "requestReceivedTimeout") != "60s" || get(ctp, "spec", "targetRefs", 0, "name") != "eg" {
 					t.Errorf("deep client timeouts = %v", get(ctp, "spec"))
 				}
@@ -181,7 +181,7 @@ func TestOverlays(t *testing.T) {
 }
 
 func TestServicePorts(t *testing.T) {
-	svc := find(t, render(t, "base"), "Service", "ailuros")
+	svc := find(t, render(t, "base"), "Service", "decision-waf")
 	want := map[string][2]any{
 		"extproc":  {portOf(config.DefaultExtProcAddr), "kubernetes.io/h2c"},
 		"extauthz": {portOf(config.ConventionalExtAuthzAddr), "kubernetes.io/h2c"},
@@ -201,22 +201,22 @@ func TestServicePorts(t *testing.T) {
 
 func TestAPIKeyComponent(t *testing.T) {
 	objs := render(t, "examples/with-api-key")
-	d := find(t, objs, "Deployment", "ailuros")
-	if env(t, d, "AILUROS_CLASSIFIER_API_KEY_FILE") != "/etc/ailuros-secret/api-key" {
-		t.Errorf("API key file env = %v", env(t, d, "AILUROS_CLASSIFIER_API_KEY_FILE"))
+	d := find(t, objs, "Deployment", "decision-waf")
+	if env(t, d, "DECISION_WAF_CLASSIFIER_API_KEY_FILE") != "/etc/decision-waf-secret/api-key" {
+		t.Errorf("API key file env = %v", env(t, d, "DECISION_WAF_CLASSIFIER_API_KEY_FILE"))
 	}
-	if get(d, "spec", "template", "spec", "containers", 0, "volumeMounts", 0, "mountPath") != "/etc/ailuros-secret" {
+	if get(d, "spec", "template", "spec", "containers", 0, "volumeMounts", 0, "mountPath") != "/etc/decision-waf-secret" {
 		t.Errorf("volumeMounts = %v", get(d, "spec", "template", "spec", "containers", 0, "volumeMounts"))
 	}
-	if get(d, "spec", "template", "spec", "volumes", 1, "secret", "secretName") != "ailuros-classifier" {
+	if get(d, "spec", "template", "spec", "volumes", 1, "secret", "secretName") != "decision-waf-classifier" {
 		t.Errorf("volumes = %v", get(d, "spec", "template", "spec", "volumes"))
 	}
 }
 
 func TestNetworkPolicyComponent(t *testing.T) {
 	objs := render(t, "examples/with-network-policy")
-	np := find(t, objs, "NetworkPolicy", "ailuros")
-	d := find(t, objs, "Deployment", "ailuros")
+	np := find(t, objs, "NetworkPolicy", "decision-waf")
+	d := find(t, objs, "Deployment", "decision-waf")
 	if got := get(np, "spec", "podSelector", "matchLabels", "app.kubernetes.io/name"); got != get(d, "spec", "selector", "matchLabels", "app.kubernetes.io/name") {
 		t.Errorf("podSelector selects name %v, not the Deployment's pods", got)
 	}
@@ -245,7 +245,7 @@ func TestNetworkPolicyComponent(t *testing.T) {
 func TestMixedModes(t *testing.T) {
 	objs := render(t, "examples/mixed-modes")
 	for _, mode := range []string{"lite", "deep"} {
-		name := "ailuros-" + mode
+		name := "decision-waf-" + mode
 		p := find(t, objs, "EnvoyExtensionPolicy", name)
 		if got := get(p, "spec", "extProc", 0, "backendRefs", 0, "name"); got != name {
 			t.Errorf("%s policy references Service %v, want %s", mode, got, name)
@@ -262,28 +262,28 @@ func TestMixedModes(t *testing.T) {
 			get(d, "spec", "template", "metadata", "labels", "app.kubernetes.io/instance") != mode {
 			t.Errorf("Deployment %s is not labelled instance=%s", name, mode)
 		}
-		if env(t, d, "AILUROS_INSPECTION_MODE") != mode {
-			t.Errorf("Deployment %s mode = %v", name, env(t, d, "AILUROS_INSPECTION_MODE"))
+		if env(t, d, "DECISION_WAF_INSPECTION_MODE") != mode {
+			t.Errorf("Deployment %s mode = %v", name, env(t, d, "DECISION_WAF_INSPECTION_MODE"))
 		}
 		if got := get(d, "spec", "template", "spec", "topologySpreadConstraints", 0, "labelSelector", "matchLabels", "app.kubernetes.io/instance"); got != mode {
 			t.Errorf("Deployment %s spreads over instance %v, want %s", name, got, mode)
 		}
 		vol := get(d, "spec", "template", "spec", "volumes", 0, "configMap", "name")
-		if vol != "ailuros-policy-"+mode {
-			t.Errorf("Deployment %s mounts ConfigMap %v, want ailuros-policy-%s", name, vol, mode)
+		if vol != "decision-waf-policy-"+mode {
+			t.Errorf("Deployment %s mounts ConfigMap %v, want decision-waf-policy-%s", name, vol, mode)
 		}
 	}
-	b := find(t, objs, "BackendTrafficPolicy", "ailuros-deep-timeouts-deep")
+	b := find(t, objs, "BackendTrafficPolicy", "decision-waf-deep-timeouts-deep")
 	if get(b, "spec", "targetRefs", 0, "kind") != "HTTPRoute" || get(b, "spec", "targetRefs", 0, "name") != "app-deep" {
 		t.Errorf("deep BackendTrafficPolicy targets %v, want HTTPRoute app-deep", get(b, "spec", "targetRefs"))
 	}
 }
 
 func TestBasePolicySetsNoSection(t *testing.T) {
-	cm := find(t, render(t, "base"), "ConfigMap", "ailuros-policy")
+	cm := find(t, render(t, "base"), "ConfigMap", "decision-waf-policy")
 	data, ok := get(cm, "data", "policy.yaml").(string)
 	if !ok {
-		t.Fatalf("ailuros-policy has no policy.yaml: %v", get(cm, "data"))
+		t.Fatalf("decision-waf-policy has no policy.yaml: %v", get(cm, "data"))
 	}
 	var sections map[string]any
 	if err := yaml.Unmarshal([]byte(data), &sections); err != nil {

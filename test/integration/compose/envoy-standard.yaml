@@ -1,7 +1,7 @@
 services:
-  ailuros:
+  decision-waf:
     environment:
-      AILUROS_INSPECTION_MODE: ${AILUROS_INSPECTION_MODE:-standard}
+      DECISION_WAF_INSPECTION_MODE: ${DECISION_WAF_INSPECTION_MODE:-standard}
 
   envoy:
     extends: { file: envoy-common.yaml, service: envoy }

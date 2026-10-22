@@ -95,7 +95,7 @@ func TestTraceContext(t *testing.T) {
 }
 
 func TestSetHeaderFillsValueAndRawValue(t *testing.T) {
-	h := SetHeader("x-ailuros-request-id", "4c0185a4576944a9")
+	h := SetHeader("x-decision-waf-request-id", "4c0185a4576944a9")
 	if got := h.GetHeader().GetValue(); got != "4c0185a4576944a9" {
 		t.Errorf("value = %q", got)
 	}

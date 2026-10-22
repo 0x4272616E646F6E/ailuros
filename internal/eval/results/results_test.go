@@ -17,7 +17,7 @@ func header() Header {
 	return Header{
 		Dataset: DatasetInfo{Path: "d.jsonl", Name: "d", SHA256: "abc", Entries: 3},
 		Backend: "jev", Model: "m", Threshold: 0.8, Policy: "default", BodyMaxBytes: 16384,
-		AilurosVersion: "dev", Started: time.Date(2026, 10, 13, 12, 0, 0, 0, time.UTC),
+		DecisionWafVersion: "dev", Started: time.Date(2026, 10, 13, 12, 0, 0, 0, time.UTC),
 	}
 }
 
@@ -68,11 +68,11 @@ func TestPartialLastLineDropped(t *testing.T) {
 }
 
 func TestReadErrors(t *testing.T) {
-	hdr := `{"ailuros_eval_results":1,"dataset":{"path":"d","sha256":"x","entries":1},"backend":"jev","model":"m","threshold":0.8,"policy":"default","body_max_bytes":1,"ailuros_version":"dev","started":"2026-10-13T12:00:00Z"}` + "\n"
+	hdr := `{"decision_waf_eval_results":1,"dataset":{"path":"d","sha256":"x","entries":1},"backend":"jev","model":"m","threshold":0.8,"policy":"default","body_max_bytes":1,"decision_waf_version":"dev","started":"2026-10-13T12:00:00Z"}` + "\n"
 	ok := `{"id":"a","label":"benign","attack_score":0.1,"outcome":"allow","latency_ms":1}` + "\n"
 	cases := map[string]struct{ in, want string }{
 		"empty":          {"", "no header"},
-		"other version":  {strings.Replace(hdr, `"ailuros_eval_results":1`, `"ailuros_eval_results":2`, 1), "unsupported results version 2"},
+		"other version":  {strings.Replace(hdr, `"decision_waf_eval_results":1`, `"decision_waf_eval_results":2`, 1), "unsupported results version 2"},
 		"malformed line": {hdr + ok + "{nope\n", "line 3"},
 		"duplicate id":   {hdr + ok + ok, `line 3: duplicate id "a" (first on line 2)`},
 		"missing id":     {hdr + `{"label":"benign","outcome":"allow","latency_ms":1}` + "\n", "line 2: missing id"},
@@ -102,7 +102,7 @@ func TestSameRun(t *testing.T) {
 		"threshold":      func(h *Header) { h.Threshold = 0.5 },
 		"sample":         func(h *Header) { h.Sample = 2 },
 		"policy content": func(h *Header) { h.PolicySHA256 = "abc" },
-		"version":        func(h *Header) { h.AilurosVersion = "v1" },
+		"version":        func(h *Header) { h.DecisionWafVersion = "v1" },
 	} {
 		c := header()
 		change(&c)

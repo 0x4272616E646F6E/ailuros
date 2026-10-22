@@ -16,7 +16,7 @@ import (
 
 func labels() []string { return classifier.Labels(policy.DefaultCategories()) }
 
-const valid = `{"ailuros_eval_dataset":1,"name":"t","description":"d"}
+const valid = `{"decision_waf_eval_dataset":1,"name":"t","description":"d"}
 {"id":"b1","label":"benign","note":"home","method":"GET","path":"/","headers":{"User-Agent":["curl/8"]},"tags":["path"]}
 {"id":"g1","label":"rce","method":"POST","path":"/pkg.Svc/Run","grpc":"pkg.Svc/Run","body_b64":"aGVsbG8gd29ybGQ="}
 `
@@ -43,7 +43,7 @@ func TestReadValid(t *testing.T) {
 
 func TestReadCRLFAndLongLines(t *testing.T) {
 	body := base64.StdEncoding.EncodeToString(bytes.Repeat([]byte("a"), 200<<10))
-	in := "{\"ailuros_eval_dataset\":1}\r\n" +
+	in := "{\"decision_waf_eval_dataset\":1}\r\n" +
 		`{"id":"b1","label":"benign","method":"POST","path":"/u","body_b64":"` + body + "\"}\r\n"
 	ds, err := Read(strings.NewReader(in), labels())
 	if err != nil {
@@ -55,7 +55,7 @@ func TestReadCRLFAndLongLines(t *testing.T) {
 }
 
 func TestReadErrors(t *testing.T) {
-	const h = `{"ailuros_eval_dataset":1}` + "\n"
+	const h = `{"decision_waf_eval_dataset":1}` + "\n"
 	const ok = `{"id":"x","label":"benign","method":"GET","path":"/"}` + "\n"
 	cases := []struct {
 		name, in string
@@ -64,7 +64,7 @@ func TestReadErrors(t *testing.T) {
 		{"empty", "", []string{"empty dataset"}},
 		{"header only", h, []string{"no requests"}},
 		{"no header", ok, []string{"line 1: header"}},
-		{"future version", `{"ailuros_eval_dataset":2}` + "\n" + ok, []string{"unsupported dataset version 2"}},
+		{"future version", `{"decision_waf_eval_dataset":2}` + "\n" + ok, []string{"unsupported dataset version 2"}},
 		{"unknown field", h + `{"id":"b1","lable":"benign","method":"GET","path":"/"}` + "\n", []string{"line 2", `unknown field "lable"`}},
 		{"missing fields", h + `{"label":"benign"}` + "\n", []string{"line 2: (no id): missing id", "missing method", `path must start with "/"`}},
 		{"bad label", h + `{"id":"x","label":"sql","method":"GET","path":"/"}` + "\n", []string{`line 2: x: label "sql" is not one of benign, credential_stuffing`}},
@@ -80,7 +80,7 @@ func TestReadErrors(t *testing.T) {
 		{"two content-types", h + `{"id":"x","label":"benign","method":"POST","path":"/","headers":{"content-type":["text/plain","application/grpc"]}}` + "\n", []string{"line 2", "several content-type values"}},
 		{"label twice", h + `{"id":"x","label":"benign","label":"sqli","method":"GET","path":"/"}` + "\n", []string{"line 2", `duplicate key "label"`}},
 		{"label in another case", h + `{"id":"x","label":"benign","LABEL":"sqli","method":"GET","path":"/"}` + "\n", []string{"line 2", `unknown field "LABEL"`}},
-		{"header field in another case", `{"ailuros_eval_dataset":1,"NAME":"x"}` + "\n" + ok, []string{"line 1", `unknown field "NAME"`}},
+		{"header field in another case", `{"decision_waf_eval_dataset":1,"NAME":"x"}` + "\n" + ok, []string{"line 1", `unknown field "NAME"`}},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {

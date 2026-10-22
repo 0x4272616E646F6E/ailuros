@@ -27,7 +27,7 @@ func NewGuard(inner Classifier, timeout time.Duration, b *Breaker) *Guard {
 }
 
 func (g *Guard) Classify(ctx context.Context, r *inspect.Request, cats []policy.Category) (Verdict, error) {
-	ctx, span := tracer.Start(ctx, "ailuros.classify")
+	ctx, span := tracer.Start(ctx, "decision_waf.classify")
 	defer span.End()
 	v, err := g.classify(ctx, r, cats)
 	if err != nil {
@@ -35,9 +35,9 @@ func (g *Guard) Classify(ctx context.Context, r *inspect.Request, cats []policy.
 		span.SetStatus(codes.Error, string(ReasonOf(err)))
 	} else {
 		span.SetAttributes(
-			attribute.Float64("ailuros.attack_score", v.AttackScore()),
-			attribute.String("ailuros.category", v.Category),
-			attribute.Float64("ailuros.confidence", v.Confidence),
+			attribute.Float64("decision_waf.attack_score", v.AttackScore()),
+			attribute.String("decision_waf.category", v.Category),
+			attribute.Float64("decision_waf.confidence", v.Confidence),
 		)
 	}
 	return v, err

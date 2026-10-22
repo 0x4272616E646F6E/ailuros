@@ -158,18 +158,18 @@ func TestTakeJA4(t *testing.T) {
 		removed bool
 	}{
 		{"off", "", []string{fp}, "", false},
-		{"set", "x-ailuros-ja4", []string{fp}, fp, true},
-		{"no tls", "x-ailuros-ja4", []string{"-"}, "", true},
-		{"two values", "x-ailuros-ja4", []string{fp, "forged"}, "", true},
-		{"absent", "x-ailuros-ja4", nil, "", false},
+		{"set", "x-decision-waf-ja4", []string{fp}, fp, true},
+		{"no tls", "x-decision-waf-ja4", []string{"-"}, "", true},
+		{"two values", "x-decision-waf-ja4", []string{fp, "forged"}, "", true},
+		{"absent", "x-decision-waf-ja4", nil, "", false},
 	}
 	for _, c := range cases {
 		h := map[string][]string{}
 		if c.values != nil {
-			h["x-ailuros-ja4"] = c.values
+			h["x-decision-waf-ja4"] = c.values
 		}
 		got := TakeJA4(h, c.header)
-		_, still := h["x-ailuros-ja4"]
+		_, still := h["x-decision-waf-ja4"]
 		if got != c.want || still == c.removed && c.values != nil {
 			t.Errorf("%s: got %q, header kept %v", c.name, got, still)
 		}

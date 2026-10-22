@@ -35,7 +35,7 @@ const (
 	echoAdminPort = 8081
 )
 
-var ailurosAdminPort = mustPort(config.DefaultMetricsAddr)
+var decisionWafAdminPort = mustPort(config.DefaultMetricsAddr)
 
 func mustPort(addr string) int {
 	p, err := strconv.Atoi(strings.TrimPrefix(addr, ":"))
@@ -52,8 +52,8 @@ type proxy struct {
 }
 
 type environment interface {
-	ailurosLogs() ([]byte, error)
-	stopAiluros() error
+	decisionWafLogs() ([]byte, error)
+	stopDecisionWaf() error
 	diagnostics() string
 }
 
@@ -79,9 +79,9 @@ func newStack(name string, env environment, p proxy) *Stack {
 	}
 }
 
-func (s *Stack) StopAiluros(t *testing.T) {
+func (s *Stack) StopDecisionWaf(t *testing.T) {
 	t.Helper()
-	if err := s.env.stopAiluros(); err != nil {
+	if err := s.env.stopDecisionWaf(); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -215,9 +215,9 @@ func echoed(t *testing.T, resp *Response) echoView {
 
 func upstreamID(t *testing.T, v echoView) string {
 	t.Helper()
-	ids := v.Headers.Values("X-Ailuros-Request-Id")
+	ids := v.Headers.Values("X-Decision-Waf-Request-Id")
 	if len(ids) != 1 || ids[0] == "" {
-		t.Fatalf("echo saw X-Ailuros-Request-Id %q, want exactly one non-empty value", ids)
+		t.Fatalf("echo saw X-Decision-Waf-Request-Id %q, want exactly one non-empty value", ids)
 	}
 	return ids[0]
 }
@@ -227,9 +227,9 @@ func wantDeny(t *testing.T, resp *Response, status int, msg string) string {
 	if resp.Status != status {
 		t.Fatalf("status = %d, want %d; body: %s", resp.Status, status, resp.Body)
 	}
-	id := resp.Header.Get("X-Ailuros-Request-Id")
+	id := resp.Header.Get("X-Decision-Waf-Request-Id")
 	if id == "" {
-		t.Errorf("denial has no X-Ailuros-Request-Id header")
+		t.Errorf("denial has no X-Decision-Waf-Request-Id header")
 	}
 	if ct := resp.Header.Get("Content-Type"); !strings.HasPrefix(ct, "application/json") {
 		t.Errorf("Content-Type = %q, want application/json", ct)
@@ -250,7 +250,7 @@ func (d Decision) Str(key string) string { s, _ := d[key].(string); return s }
 
 func (s *Stack) decisions(t *testing.T, requestID string) []Decision {
 	t.Helper()
-	out, err := s.env.ailurosLogs()
+	out, err := s.env.decisionWafLogs()
 	if err != nil {
 		t.Fatal(err)
 	}

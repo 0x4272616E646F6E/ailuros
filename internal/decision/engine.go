@@ -142,7 +142,7 @@ type pending struct {
 }
 
 func (e *Engine) begin(ctx context.Context, r *inspect.Request, src Source) *pending {
-	ctx, span := tracer.Start(ctx, "ailuros.decide")
+	ctx, span := tracer.Start(ctx, "decision_waf.decide")
 	if r == nil {
 		r = &inspect.Request{}
 	}
@@ -164,18 +164,18 @@ func (e *Engine) finish(p *pending) Decision {
 
 func endSpan(span trace.Span, d Decision) {
 	attrs := []attribute.KeyValue{
-		attribute.String("ailuros.request_id", d.RequestID),
-		attribute.String("ailuros.outcome", string(d.Outcome)),
-		attribute.String("ailuros.route", d.Route),
+		attribute.String("decision_waf.request_id", d.RequestID),
+		attribute.String("decision_waf.outcome", string(d.Outcome)),
+		attribute.String("decision_waf.route", d.Route),
 	}
 	if d.Reason != "" {
-		attrs = append(attrs, attribute.String("ailuros.reason", string(d.Reason)))
+		attrs = append(attrs, attribute.String("decision_waf.reason", string(d.Reason)))
 		span.SetStatus(codes.Error, string(d.Reason))
 	} else if d.Note != "" {
-		attrs = append(attrs, attribute.String("ailuros.reason", string(d.Note)))
+		attrs = append(attrs, attribute.String("decision_waf.reason", string(d.Note)))
 	}
 	if d.Limit != "" {
-		attrs = append(attrs, attribute.String("ailuros.limit", d.Limit))
+		attrs = append(attrs, attribute.String("decision_waf.limit", d.Limit))
 	}
 	span.SetAttributes(attrs...)
 }

@@ -54,8 +54,8 @@ func Text(w io.Writer, h results.Header, s metrics.Summary) error {
 func runHeader(b *strings.Builder, h results.Header) {
 	fmt.Fprintf(b, "dataset  %s (%s, sha256 %s, %d requests%s)\n",
 		cmp.Or(h.Dataset.Name, "unnamed"), h.Dataset.Path, short(h.Dataset.SHA256), h.Dataset.Entries, sampleNote(h))
-	fmt.Fprintf(b, "backend  %s, model %s%s, policy %s, run threshold %s, ailuros %s, started %s\n",
-		h.Backend, h.Model, serverNote(h), h.Policy, thr(h.Threshold), h.AilurosVersion, h.Started.UTC().Format(time.RFC3339))
+	fmt.Fprintf(b, "backend  %s, model %s%s, policy %s, run threshold %s, decision-waf %s, started %s\n",
+		h.Backend, h.Model, serverNote(h), h.Policy, thr(h.Threshold), h.DecisionWafVersion, h.Started.UTC().Format(time.RFC3339))
 }
 
 func serverNote(h results.Header) string {

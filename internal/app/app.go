@@ -255,7 +255,7 @@ func (a *App) Run(ctx context.Context) error {
 	wg.Add(2)
 	go func() { defer wg.Done(); a.probeUntilReady(ctx) }()
 	go func() { defer wg.Done(); a.watchPolicy(ctx) }()
-	a.log.Info("ailuros started",
+	a.log.Info("decision-waf started",
 		"version", version.Version,
 		"backend", a.cfg.Backend, "model", a.cfg.Model, "mode", a.cfg.InspectionMode, "failure_mode", a.cfg.FailureMode,
 		"extproc_addr", a.ExtProcAddr(), "extauthz_addr", a.ExtAuthzAddr(),

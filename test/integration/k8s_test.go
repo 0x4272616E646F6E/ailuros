@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	kindCluster  = "ailuros-it"
+	kindCluster  = "decision-waf-it"
 	kubeContext  = "kind-" + kindCluster
 	kindNode     = "kindest/node:v1.37.0@sha256:a1ed56cfb0e7b93589bdf97c8cd566405a265939e3620fc4f5de89adff580ae5"
 	egVersion    = "v1.9.2"
@@ -35,10 +35,10 @@ var kubeconfigPath string
 
 func TestMain(m *testing.M) {
 	flag.Parse()
-	if os.Getenv("AILUROS_K8S_SKIP_CLUSTER") == "1" {
+	if os.Getenv("DECISION_WAF_K8S_SKIP_CLUSTER") == "1" {
 		os.Exit(m.Run())
 	}
-	dir, err := os.MkdirTemp("", "ailuros-k8s-")
+	dir, err := os.MkdirTemp("", "decision-waf-k8s-")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "kubeconfig dir: %v\n", err)
 		os.Exit(1)
@@ -76,9 +76,9 @@ func setupCluster() error {
 	}
 	steps := [][]string{
 		kindDelete().Args,
-		{"docker", "compose", "-p", "ailuros-it", "-f", filepath.Join(composeDir, "common.yaml"), "build"},
+		{"docker", "compose", "-p", "decision-waf-it", "-f", filepath.Join(composeDir, "common.yaml"), "build"},
 		{"kind", "create", "cluster", "--name", kindCluster, "--kubeconfig", kubeconfigPath, "--image", kindNode, "--wait", "120s"},
-		{"kind", "load", "docker-image", "--name", kindCluster, "ailuros-it/ailuros:dev", "ailuros-it/stubmodel:dev", "ailuros-it/echo:dev"},
+		{"kind", "load", "docker-image", "--name", kindCluster, "decision-waf-it/decision-waf:dev", "decision-waf-it/stubmodel:dev", "decision-waf-it/echo:dev"},
 		append([]string{"kubectl"}, kubectlArgs("apply", "--server-side", "-f", egManifest)...),
 		append([]string{"kubectl"}, kubectlArgs("-n", egNamespace, "wait", "--for=condition=Available", "--timeout=5m", "deployment/envoy-gateway")...),
 		append([]string{"kubectl"}, kubectlArgs("apply", "-f", filepath.Join(k8sDir, "gatewayclass.yaml"))...),
@@ -120,7 +120,7 @@ func TestKubectlArgsPinContext(t *testing.T) {
 	kubeconfigPath = "/tmp/test-kubeconfig"
 	defer func() { kubeconfigPath = old }()
 	got := kubectlArgs("-n", "x", "get", "pods")
-	want := []string{"--kubeconfig", "/tmp/test-kubeconfig", "--context", "kind-ailuros-it", "-n", "x", "get", "pods"}
+	want := []string{"--kubeconfig", "/tmp/test-kubeconfig", "--context", "kind-decision-waf-it", "-n", "x", "get", "pods"}
 	if !slices.Equal(got, want) {
 		t.Errorf("kubectlArgs = %q, want %q", got, want)
 	}
@@ -219,7 +219,7 @@ func policyKind(overlay string) string {
 
 func upK8s(t *testing.T, overlay string) *Stack {
 	t.Helper()
-	ns := "ailuros-" + strings.ReplaceAll(overlay, "_", "-")
+	ns := "decision-waf-" + strings.ReplaceAll(overlay, "_", "-")
 	dir := filepath.Join(k8sDir, overlay)
 	s := newStack(overlay, kubeEnvironment{ns}, proxy{})
 	forwarded := false
@@ -236,12 +236,12 @@ func upK8s(t *testing.T, overlay string) *Stack {
 	}
 	mustKubectl(t, "apply", "--dry-run=server", "-k", dir)
 	mustKubectl(t, "apply", "-k", dir)
-	for _, d := range []string{"ailuros", "stubmodel", "echo"} {
+	for _, d := range []string{"decision-waf", "stubmodel", "echo"} {
 		mustKubectl(t, "-n", ns, "rollout", "status", "deployment/"+d, "--timeout="+k8sReadyWait)
 	}
 	policies := []string{policyKind(overlay) + "/decision-waf"}
 	if overlay == "deep" {
-		policies = append(policies, "backendtrafficpolicy/ailuros-deep-timeouts", "clienttrafficpolicy/ailuros-deep-client-timeouts")
+		policies = append(policies, "backendtrafficpolicy/decision-waf-deep-timeouts", "clienttrafficpolicy/decision-waf-deep-client-timeouts")
 	}
 	for _, p := range policies {
 		mustKubectl(t, "-n", ns, "wait", p, "--timeout=2m",
@@ -269,7 +269,7 @@ func upK8s(t *testing.T, overlay string) *Stack {
 	s.ProxyAddr = portForward(t, egNamespace, "svc/"+svc, 80)
 	s.stubURL = "http://" + portForward(t, ns, "svc/stubmodel", stubPort)
 	s.echoURL = "http://" + portForward(t, ns, "svc/app", echoAdminPort)
-	s.adminURL = "http://" + portForward(t, ns, "svc/ailuros", ailurosAdminPort)
+	s.adminURL = "http://" + portForward(t, ns, "svc/decision-waf", decisionWafAdminPort)
 	forwarded = true
 	t.Cleanup(func() {
 		if t.Failed() {
@@ -291,15 +291,15 @@ func waitAttached(t *testing.T, s *Stack) {
 			last = err.Error()
 		} else if resp.Status == 200 {
 			var v echoView
-			if err := json.Unmarshal(resp.Body, &v); err == nil && v.Headers.Get("X-Ailuros-Request-Id") != "" {
+			if err := json.Unmarshal(resp.Body, &v); err == nil && v.Headers.Get("X-Decision-Waf-Request-Id") != "" {
 				return
 			}
-			last = "200 without X-Ailuros-Request-Id"
+			last = "200 without X-Decision-Waf-Request-Id"
 		} else {
 			last = fmt.Sprintf("status %d", resp.Status)
 		}
 		if time.Now().After(deadline) {
-			t.Fatalf("stack %s: Ailuros not attached to the proxy after 60s (last: %s)", s.Name, last)
+			t.Fatalf("stack %s: decision-waf not attached to the proxy after 60s (last: %s)", s.Name, last)
 		}
 		time.Sleep(time.Second)
 	}
@@ -307,15 +307,15 @@ func waitAttached(t *testing.T, s *Stack) {
 
 type kubeEnvironment struct{ ns string }
 
-func (k kubeEnvironment) ailurosLogs() ([]byte, error) {
-	return kubectl("-n", k.ns, "logs", "-l", "app.kubernetes.io/name=ailuros", "--tail=-1", "--max-log-requests=10")
+func (k kubeEnvironment) decisionWafLogs() ([]byte, error) {
+	return kubectl("-n", k.ns, "logs", "-l", "app.kubernetes.io/name=decision-waf", "--tail=-1", "--max-log-requests=10")
 }
 
-func (k kubeEnvironment) stopAiluros() error {
-	if _, err := kubectl("-n", k.ns, "scale", "deployment/ailuros", "--replicas=0"); err != nil {
+func (k kubeEnvironment) stopDecisionWaf() error {
+	if _, err := kubectl("-n", k.ns, "scale", "deployment/decision-waf", "--replicas=0"); err != nil {
 		return err
 	}
-	_, err := kubectl("-n", k.ns, "wait", "pod", "-l", "app.kubernetes.io/name=ailuros", "--for=delete", "--timeout=60s")
+	_, err := kubectl("-n", k.ns, "wait", "pod", "-l", "app.kubernetes.io/name=decision-waf", "--for=delete", "--timeout=60s")
 	return err
 }
 
@@ -329,7 +329,7 @@ func (k kubeEnvironment) diagnostics() string {
 		}
 	}
 	owner := "gateway.envoyproxy.io/owning-gateway-namespace=" + k.ns
-	section("Ailuros logs", "-n", k.ns, "logs", "-l", "app.kubernetes.io/name=ailuros", "--tail=50")
+	section("decision-waf logs", "-n", k.ns, "logs", "-l", "app.kubernetes.io/name=decision-waf", "--tail=50")
 	section("Envoy logs", "-n", egNamespace, "logs", "-l", owner, "--all-containers", "--tail=50")
 	section("Envoy Gateway controller logs", "-n", egNamespace, "logs", "deployment/envoy-gateway", "--tail=50")
 	section("policy and route status", "-n", k.ns, "get",

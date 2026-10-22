@@ -35,7 +35,7 @@ func New(cfg config.Config, log *slog.Logger) (classifier.Classifier, func(conte
 			}
 			log.Info("classifier capabilities detected", "json_schema", caps.JSONSchema, "logprobs", caps.Logprobs)
 			if caps.SchemaIgnored {
-				log.Warn("classifier accepted json_schema but answered outside its labels; answers outside the label set follow AILUROS_BAD_OUTPUT")
+				log.Warn("classifier accepted json_schema but answered outside its labels; answers outside the label set follow DECISION_WAF_BAD_OUTPUT")
 			}
 			if !caps.Logprobs {
 				log.Warn("classifier does not return logprobs; every label has probability 1.0, so the attack-probability threshold acts as plain allow/block")

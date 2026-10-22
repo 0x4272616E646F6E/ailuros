@@ -21,5 +21,5 @@ func TestEnvoyExtAuthz(t *testing.T) {
 		}
 	})
 
-	failClosedWhenAilurosDown(t, s, http.StatusServiceUnavailable, nil)
+	failClosedWhenDecisionWafDown(t, s, http.StatusServiceUnavailable, nil)
 }

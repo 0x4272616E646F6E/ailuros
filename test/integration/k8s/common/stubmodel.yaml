@@ -12,7 +12,7 @@ spec:
     spec:
       containers:
         - name: stubmodel
-          image: ailuros-it/stubmodel:dev
+          image: decision-waf-it/stubmodel:dev
           ports: [{ containerPort: 8080 }]
           readinessProbe:
             httpGet: { path: /healthz, port: 8080 }

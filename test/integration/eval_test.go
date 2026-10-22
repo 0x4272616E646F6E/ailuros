@@ -14,21 +14,21 @@ import (
 )
 
 func TestEvalAgainstStub(t *testing.T) {
-	c := &composeEnvironment{project: "ailuros-it-eval", files: []string{filepath.Join(composeDir, "common.yaml")}, vars: composeEnv(nil)}
+	c := &composeEnvironment{project: "decision-waf-it-eval", files: []string{filepath.Join(composeDir, "common.yaml")}, vars: composeEnv(nil)}
 	startProject(t, newStack("eval", c, proxy{}), c, "stubmodel")
 	stub := "http://" + c.port(t, "stubmodel", stubPort)
 
-	bin := filepath.Join(t.TempDir(), "ailuros-eval")
+	bin := filepath.Join(t.TempDir(), "decision-waf-eval")
 	if out, err := exec.Command("go", "build", "-o", bin, "../../cmd/decision-waf-eval").CombinedOutput(); err != nil {
 		t.Fatalf("go build: %v\n%s", err, out)
 	}
 	resultsPath := filepath.Join(t.TempDir(), "results.jsonl")
 	run := exec.Command(bin, "run", "--dataset", samplePath, "--out", resultsPath, "--concurrency", "4")
 	run.Env = append(composeEnv(nil),
-		"AILUROS_CLASSIFIER_BACKEND=jev", "AILUROS_CLASSIFIER_BASE_URL="+stub,
-		"AILUROS_CLASSIFIER_MODEL=stub", "AILUROS_CLASSIFIER_TIMEOUT=5s")
+		"DECISION_WAF_CLASSIFIER_BACKEND=jev", "DECISION_WAF_CLASSIFIER_BASE_URL="+stub,
+		"DECISION_WAF_CLASSIFIER_MODEL=stub", "DECISION_WAF_CLASSIFIER_TIMEOUT=5s")
 	if out, err := run.CombinedOutput(); err != nil {
-		t.Fatalf("ailuros-eval run: %v\n%s", err, out)
+		t.Fatalf("decision-waf-eval run: %v\n%s", err, out)
 	}
 
 	f, err := results.ReadFile(resultsPath)
@@ -55,7 +55,7 @@ func TestEvalAgainstStub(t *testing.T) {
 
 	rep, err := exec.Command(bin, "report", resultsPath, "--json").Output()
 	if err != nil {
-		t.Fatalf("ailuros-eval report: %v", err)
+		t.Fatalf("decision-waf-eval report: %v", err)
 	}
 	var got struct {
 		Summary struct{ Total, Errors int }

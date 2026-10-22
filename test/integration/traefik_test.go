@@ -35,5 +35,5 @@ func TestTraefik(t *testing.T) {
 		}
 	})
 
-	failClosedWhenAilurosDown(t, s, http.StatusInternalServerError, nil)
+	failClosedWhenDecisionWafDown(t, s, http.StatusInternalServerError, nil)
 }

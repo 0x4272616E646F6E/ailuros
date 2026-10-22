@@ -22,14 +22,14 @@ import (
 	"github.com/0x4272616E646F6E/decision-waf/internal/policy"
 )
 
-const tiny = `{"ailuros_eval_dataset":1,"name":"tiny"}
+const tiny = `{"decision_waf_eval_dataset":1,"name":"tiny"}
 {"id":"b1","label":"benign","method":"GET","path":"/home"}
 {"id":"b2","label":"benign","method":"GET","path":"/about"}
 {"id":"a1","label":"sqli","method":"GET","path":"/evil"}
 `
 
 func env(model string) map[string]string {
-	return map[string]string{"AILUROS_CLASSIFIER_BACKEND": "jev", "AILUROS_CLASSIFIER_MODEL": model}
+	return map[string]string{"DECISION_WAF_CLASSIFIER_BACKEND": "jev", "DECISION_WAF_CLASSIFIER_MODEL": model}
 }
 
 func keyword() *fake.Classifier {
@@ -88,7 +88,7 @@ func TestRunThenReport(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(f.Results) != 3 || f.Header.Model != "fake-model" || f.Header.Threshold != 0.8 || f.Header.Dataset.Name != "tiny" || f.Header.AilurosVersion != "dev" {
+	if len(f.Results) != 3 || f.Header.Model != "fake-model" || f.Header.Threshold != 0.8 || f.Header.Dataset.Name != "tiny" || f.Header.DecisionWafVersion != "dev" {
 		t.Errorf("results %+v", f)
 	}
 	h := newCLI(nil, nil, nil)
@@ -107,7 +107,7 @@ func TestRunThenReport(t *testing.T) {
 		t.Errorf("detection = %+v", got.Summary.Detection)
 	}
 	h = newCLI(nil, nil, nil)
-	if code := h.main("report", "--markdown", out); code != 0 || !strings.Contains(h.stdout.String(), "# ailuros-eval report") {
+	if code := h.main("report", "--markdown", out); code != 0 || !strings.Contains(h.stdout.String(), "# decision-waf-eval report") {
 		t.Errorf("markdown exit %d: %s", code, h.stdout)
 	}
 }
@@ -153,8 +153,8 @@ func TestResumeContinuesAfterPartialLine(t *testing.T) {
 func TestResumeRefusesDifferentRun(t *testing.T) {
 	for name, vars := range map[string]map[string]string{
 		"model":    env("other-model"),
-		"timeout":  {"AILUROS_CLASSIFIER_BACKEND": "jev", "AILUROS_CLASSIFIER_MODEL": "m", "AILUROS_CLASSIFIER_TIMEOUT": "60s"},
-		"base URL": {"AILUROS_CLASSIFIER_BACKEND": "jev", "AILUROS_CLASSIFIER_MODEL": "m", "AILUROS_CLASSIFIER_BASE_URL": "http://other:1234"},
+		"timeout":  {"DECISION_WAF_CLASSIFIER_BACKEND": "jev", "DECISION_WAF_CLASSIFIER_MODEL": "m", "DECISION_WAF_CLASSIFIER_TIMEOUT": "60s"},
+		"base URL": {"DECISION_WAF_CLASSIFIER_BACKEND": "jev", "DECISION_WAF_CLASSIFIER_MODEL": "m", "DECISION_WAF_CLASSIFIER_BASE_URL": "http://other:1234"},
 	} {
 		ds, out := runTiny(t, "m", keyword())
 		h := newCLI(vars, keyword(), nil)
@@ -168,7 +168,7 @@ func TestBaseURLRecordedWithoutCredentials(t *testing.T) {
 	ds := writeFile(t, "tiny.jsonl", tiny)
 	out := filepath.Join(t.TempDir(), "r.jsonl")
 	vars := env("m")
-	vars["AILUROS_CLASSIFIER_BASE_URL"] = "http://user:secret@models.internal:1234/v1"
+	vars["DECISION_WAF_CLASSIFIER_BASE_URL"] = "http://user:secret@models.internal:1234/v1"
 	if code := newCLI(vars, keyword(), nil).main("run", "--dataset", ds, "--out", out); code != 0 {
 		t.Fatal("run failed")
 	}
@@ -205,7 +205,7 @@ func TestUsageErrors(t *testing.T) {
 }
 
 func TestInvalidInputs(t *testing.T) {
-	bad := writeFile(t, "bad.jsonl", `{"ailuros_eval_dataset":1}`+"\n"+`{"id":"x","label":"nope","method":"GET","path":"/"}`+"\n")
+	bad := writeFile(t, "bad.jsonl", `{"decision_waf_eval_dataset":1}`+"\n"+`{"id":"x","label":"nope","method":"GET","path":"/"}`+"\n")
 	ds := writeFile(t, "tiny.jsonl", tiny)
 	cases := []struct {
 		name string
@@ -215,7 +215,7 @@ func TestInvalidInputs(t *testing.T) {
 	}{
 		{"bad dataset", env("m"), []string{"run", "--dataset", bad}, "line 2"},
 		{"missing dataset", env("m"), []string{"run", "--dataset", ds + ".missing"}, "no such file"},
-		{"no backend", map[string]string{}, []string{"run", "--dataset", ds}, "AILUROS_CLASSIFIER_BACKEND"},
+		{"no backend", map[string]string{}, []string{"run", "--dataset", ds}, "DECISION_WAF_CLASSIFIER_BACKEND"},
 		{"not results", env("m"), []string{"report", ds}, "header"},
 	}
 	for _, c := range cases {
@@ -304,7 +304,7 @@ func TestRunReportsErrors(t *testing.T) {
 	if code := h.main("run", "--dataset", ds, "--out", out); code != 0 {
 		t.Fatalf("exit %d: %s", code, h.stderr)
 	}
-	if !strings.Contains(h.stderr.String(), "2 of 3 requests failed (timeout 2); see ailuros-eval report") {
+	if !strings.Contains(h.stderr.String(), "2 of 3 requests failed (timeout 2); see decision-waf-eval report") {
 		t.Errorf("stderr lacks the error summary:\n%s", h.stderr)
 	}
 }
@@ -320,7 +320,7 @@ func TestRunWithoutErrorsStaysQuiet(t *testing.T) {
 func TestResumeRefusesChangedPolicyContent(t *testing.T) {
 	pol := writeFile(t, "policy.yaml", "categories: [{name: sqli}]")
 	vars := env("m")
-	vars["AILUROS_POLICY_FILE"] = pol
+	vars["DECISION_WAF_POLICY_FILE"] = pol
 	ds := writeFile(t, "tiny.jsonl", tiny)
 	out := filepath.Join(t.TempDir(), "r.jsonl")
 	h := newCLI(vars, keyword(), nil)
@@ -347,7 +347,7 @@ func TestResumeRefusesChangedPolicyContent(t *testing.T) {
 func TestNotReadyErrorHidesCredentials(t *testing.T) {
 	ds := writeFile(t, "tiny.jsonl", tiny)
 	vars := env("m")
-	vars["AILUROS_CLASSIFIER_BASE_URL"] = "http://user:secret@models.internal:1234/v1"
+	vars["DECISION_WAF_CLASSIFIER_BASE_URL"] = "http://user:secret@models.internal:1234/v1"
 	h := newCLI(vars, keyword(), errors.New("down"))
 	if code := h.main("run", "--dataset", ds, "--out", filepath.Join(t.TempDir(), "r.jsonl")); code == 0 || strings.Contains(h.stderr.String(), "secret") {
 		t.Errorf("exit %d, stderr %q; want a failure without the password", code, h.stderr)
@@ -359,7 +359,7 @@ func TestPolicyReadOnce(t *testing.T) {
 	pf := writeFile(t, "policy.yaml", "not: [valid")
 	good := []byte("routes: [{match: {path_prefix: /admin}, failure_mode: closed}]\n")
 	vars := env("m")
-	vars["AILUROS_POLICY_FILE"] = pf
+	vars["DECISION_WAF_POLICY_FILE"] = pf
 	h := newCLI(vars, keyword(), nil)
 	reads, read := 0, h.cli.readFile
 	h.cli.readFile = func(p string) ([]byte, error) {

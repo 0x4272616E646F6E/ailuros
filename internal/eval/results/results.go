@@ -26,21 +26,21 @@ type DatasetInfo struct {
 }
 
 type Header struct {
-	Version        int         `json:"ailuros_eval_results"`
-	Dataset        DatasetInfo `json:"dataset"`
-	Backend        string      `json:"backend"`
-	BaseURL        string      `json:"base_url,omitempty"`
-	Model          string      `json:"model"`
-	TimeoutMS      int64       `json:"timeout_ms,omitempty"`
-	Threshold      float64     `json:"threshold"`
-	Policy         string      `json:"policy"`
-	PolicySHA256   string      `json:"policy_sha256,omitempty"`
-	BodyMaxBytes   int         `json:"body_max_bytes"`
-	PromptVersion  int         `json:"prompt_version,omitempty"`
-	Sample         int         `json:"sample,omitempty"`
-	Seed           uint64      `json:"seed,omitempty"`
-	AilurosVersion string      `json:"ailuros_version"`
-	Started        time.Time   `json:"started"`
+	Version            int         `json:"decision_waf_eval_results"`
+	Dataset            DatasetInfo `json:"dataset"`
+	Backend            string      `json:"backend"`
+	BaseURL            string      `json:"base_url,omitempty"`
+	Model              string      `json:"model"`
+	TimeoutMS          int64       `json:"timeout_ms,omitempty"`
+	Threshold          float64     `json:"threshold"`
+	Policy             string      `json:"policy"`
+	PolicySHA256       string      `json:"policy_sha256,omitempty"`
+	BodyMaxBytes       int         `json:"body_max_bytes"`
+	PromptVersion      int         `json:"prompt_version,omitempty"`
+	Sample             int         `json:"sample,omitempty"`
+	Seed               uint64      `json:"seed,omitempty"`
+	DecisionWafVersion string      `json:"decision_waf_version"`
+	Started            time.Time   `json:"started"`
 }
 
 func (h Header) SameRun(o Header) bool {

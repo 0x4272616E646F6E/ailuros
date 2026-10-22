@@ -36,10 +36,10 @@ func TestNginx(t *testing.T) {
 		s.WantDecision(t, wantDeny(t, resp, http.StatusForbidden, "request blocked"), "block", "")
 	})
 
-	t.Run("Ailuros hanging fails closed with 503 within seconds", func(t *testing.T) {
+	t.Run("decision-waf hanging fails closed with 503 within seconds", func(t *testing.T) {
 		c := composeOf(t, s)
-		if out, err := c.run("pause", "ailuros"); err != nil {
-			t.Fatalf("compose pause ailuros: %v\n%s", err, out)
+		if out, err := c.run("pause", "decision-waf"); err != nil {
+			t.Fatalf("compose pause decision-waf: %v\n%s", err, out)
 		}
 		unpaused := false
 		unpause := func() {
@@ -47,8 +47,8 @@ func TestNginx(t *testing.T) {
 				return
 			}
 			unpaused = true
-			if out, err := c.run("unpause", "ailuros"); err != nil {
-				t.Errorf("compose unpause ailuros: %v\n%s", err, out)
+			if out, err := c.run("unpause", "decision-waf"); err != nil {
+				t.Errorf("compose unpause decision-waf: %v\n%s", err, out)
 			}
 		}
 		defer unpause()
@@ -57,7 +57,7 @@ func TestNginx(t *testing.T) {
 		resp, err := s.do(s.http1, Request{Method: "GET", Path: "/hang/" + newMarker(t)})
 		elapsed := time.Since(start)
 		if err != nil {
-			t.Fatalf("request with Ailuros paused: %v after %v", err, elapsed.Round(100*time.Millisecond))
+			t.Fatalf("request with decision-waf paused: %v after %v", err, elapsed.Round(100*time.Millisecond))
 		}
 		t.Logf("NGINX answered %d after %v", resp.Status, elapsed.Round(100*time.Millisecond))
 		if resp.Status != http.StatusServiceUnavailable {
@@ -78,7 +78,7 @@ func TestNginx(t *testing.T) {
 		echoed(t, s.Get(t, "http1", "/after-hang/"+newMarker(t), nil))
 	})
 
-	failClosedWhenAilurosDown(t, s, http.StatusServiceUnavailable, func(t *testing.T, resp *Response) {
+	failClosedWhenDecisionWafDown(t, s, http.StatusServiceUnavailable, func(t *testing.T, resp *Response) {
 		var body map[string]string
 		if err := json.Unmarshal(resp.Body, &body); err != nil || body["error"] != "service unavailable" || body["request_id"] != "" {
 			t.Errorf("body = %s, want the 503 JSON with an empty request_id (%v)", resp.Body, err)
@@ -95,9 +95,9 @@ func dockerOut(t *testing.T, args ...string) string {
 	return strings.TrimSpace(string(out))
 }
 
-func TestNginxReResolvesAilurosWithoutReload(t *testing.T) {
+func TestNginxReResolvesDecisionWafWithoutReload(t *testing.T) {
 	t.Parallel()
-	s := up(t, "nginx", map[string]string{"AILUROS_FAILURE_MODE": "open"})
+	s := up(t, "nginx", map[string]string{"DECISION_WAF_FAILURE_MODE": "open"})
 	c := composeOf(t, s)
 	network := c.project + "_default"
 	ipOf := func(container string) string {
@@ -110,26 +110,26 @@ func TestNginxReResolvesAilurosWithoutReload(t *testing.T) {
 
 	nginxID := container("nginx")
 	nginxStarted := dockerOut(t, "inspect", "-f", "{{.State.StartedAt}}", nginxID)
-	oldIP := ipOf(container("ailuros"))
+	oldIP := ipOf(container("decision-waf"))
 
-	s.StopAiluros(t)
-	holder := "ailuros-it-ipholder-" + newMarker(t)
+	s.StopDecisionWaf(t)
+	holder := "decision-waf-it-ipholder-" + newMarker(t)
 	t.Cleanup(func() { _ = exec.Command("docker", "rm", "-f", holder).Run() })
 	dockerOut(t, "run", "-d", "--name", holder, "--label", extraLabel+"="+c.project, "--network", network,
 		"--entrypoint", "sleep", composeImage(t, "nginx.yaml"), "3600")
 	holderIP := ipOf(holder)
-	t.Logf("Ailuros IP before: %s; throwaway container IP: %s", oldIP, holderIP)
+	t.Logf("decision-waf IP before: %s; throwaway container IP: %s", oldIP, holderIP)
 
-	if out, err := c.run("start", "ailuros"); err != nil {
-		t.Fatalf("compose start ailuros: %v\n%s", err, out)
+	if out, err := c.run("start", "decision-waf"); err != nil {
+		t.Fatalf("compose start decision-waf: %v\n%s", err, out)
 	}
-	newIP := ipOf(container("ailuros"))
-	t.Logf("Ailuros IP after restart: %s", newIP)
+	newIP := ipOf(container("decision-waf"))
+	t.Logf("decision-waf IP after restart: %s", newIP)
 	if newIP == oldIP {
-		t.Fatalf("Ailuros came back on the same IP %s (the throwaway container got %s); the test needs it to move", oldIP, holderIP)
+		t.Fatalf("decision-waf came back on the same IP %s (the throwaway container got %s); the test needs it to move", oldIP, holderIP)
 	}
 
-	s.adminURL = "http://" + c.port(t, "ailuros", ailurosAdminPort)
+	s.adminURL = "http://" + c.port(t, "decision-waf", decisionWafAdminPort)
 	s.waitAdminReady(t)
 
 	start := time.Now()
@@ -137,7 +137,7 @@ func TestNginxReResolvesAilurosWithoutReload(t *testing.T) {
 	for {
 		resp, err := s.do(s.http1, Request{Method: "GET", Path: "/after/" + newMarker(t)})
 		if err == nil && resp.Status == http.StatusOK {
-			t.Logf("NGINX served a benign request %v after Ailuros was ready", time.Since(start).Round(100*time.Millisecond))
+			t.Logf("NGINX served a benign request %v after decision-waf was ready", time.Since(start).Round(100*time.Millisecond))
 			break
 		}
 		if err != nil {
@@ -146,7 +146,7 @@ func TestNginxReResolvesAilurosWithoutReload(t *testing.T) {
 			last = resp.Proto + " " + http.StatusText(resp.Status) + " " + string(resp.Body)
 		}
 		if time.Since(start) > 20*time.Second {
-			t.Fatalf("NGINX still failing 20s after Ailuros moved from %s to %s (last: %s); it is not re-resolving", oldIP, newIP, last)
+			t.Fatalf("NGINX still failing 20s after decision-waf moved from %s to %s (last: %s); it is not re-resolving", oldIP, newIP, last)
 		}
 		time.Sleep(500 * time.Millisecond)
 	}

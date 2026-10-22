@@ -89,7 +89,7 @@ func (st *stream) checkUndecided() {
 		return
 	}
 	s.undecided.Do(func() {
-		s.log.Warn("ext_proc stream ended before Ailuros saw the request body, so the request was not classified; set the Envoy ext_proc request_body_mode that matches AILUROS_INSPECTION_MODE (see deploy/envoy)",
+		s.log.Warn("ext_proc stream ended before decision-waf saw the request body, so the request was not classified; set the Envoy ext_proc request_body_mode that matches DECISION_WAF_INSPECTION_MODE (see deploy/envoy)",
 			"mode", s.cfg.Mode)
 	})
 	s.onDowngrade()
@@ -149,7 +149,7 @@ func (st *stream) onHeaders(msg *extprocv3.ProcessingRequest, h *extprocv3.HttpH
 	switch {
 	case mode != inspect.ModeLite && st.bodyNotSent(msg, h):
 		st.s.mismatch.Do(func() {
-			st.s.log.Warn("Envoy is not sending request bodies in the body mode AILUROS_INSPECTION_MODE needs; classifying on headers only (see deploy/envoy)", "mode", mode)
+			st.s.log.Warn("Envoy is not sending request bodies in the body mode DECISION_WAF_INSPECTION_MODE needs; classifying on headers only (see deploy/envoy)", "mode", mode)
 		})
 		st.s.onDowngrade()
 		st.src.Mode = inspect.ModeLite

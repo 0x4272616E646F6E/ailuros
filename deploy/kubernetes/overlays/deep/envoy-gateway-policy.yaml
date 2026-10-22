@@ -1,7 +1,7 @@
 apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: EnvoyExtensionPolicy
 metadata:
-  name: ailuros
+  name: decision-waf
 spec:
   targetRefs:
     - group: gateway.networking.k8s.io
@@ -9,7 +9,7 @@ spec:
       name: eg
   extProc:
     - backendRefs:
-        - name: ailuros
+        - name: decision-waf
           port: 9001
       messageTimeout: 1500ms
       failOpen: false
@@ -25,7 +25,7 @@ spec:
 apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: BackendTrafficPolicy
 metadata:
-  name: ailuros-deep-timeouts
+  name: decision-waf-deep-timeouts
 spec:
   targetRefs:
     - group: gateway.networking.k8s.io
@@ -38,7 +38,7 @@ spec:
 apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: ClientTrafficPolicy
 metadata:
-  name: ailuros-deep-client-timeouts
+  name: decision-waf-deep-client-timeouts
 spec:
   targetRefs:
     - group: gateway.networking.k8s.io

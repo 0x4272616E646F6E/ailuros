@@ -12,7 +12,7 @@ spec:
     spec:
       containers:
         - name: echo
-          image: ailuros-it/echo:dev
+          image: decision-waf-it/echo:dev
           ports: [{ containerPort: 8080 }, { containerPort: 8081 }]
           readinessProbe:
             httpGet: { path: /healthz, port: 8081 }

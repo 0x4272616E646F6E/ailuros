@@ -105,7 +105,7 @@ func TestDockerfileExposesEveryListener(t *testing.T) {
 }
 
 func TestForwardAuthConfigsUseTheDefaultPort(t *testing.T) {
-	want := "ailuros:" + port(config.DefaultForwardAuthAddr)
+	want := "decision-waf:" + port(config.DefaultForwardAuthAddr)
 	for _, f := range []string{"nginx/nginx.conf", "traefik/dynamic.yml"} {
 		data, err := os.ReadFile("../../deploy/" + f)
 		if err != nil {

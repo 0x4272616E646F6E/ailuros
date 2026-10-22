@@ -62,7 +62,7 @@ func TestText(t *testing.T) {
 	}
 	contains(t, buf.String(),
 		"dataset  fixture (eval/datasets/fixture.jsonl, sha256 aaaaaaaaaaaa, 11 requests)",
-		"backend  jev, model d1-3b, policy default, run threshold 0.8, ailuros dev",
+		"backend  jev, model d1-3b, policy default, run threshold 0.8, decision-waf dev",
 		"warning: 2 of 11 requests failed",
 		"precision 0.750  recall 0.750  f1 0.750  false-positive rate 0.200",
 		"best F1: threshold 0.40",
@@ -80,7 +80,7 @@ func TestMarkdown(t *testing.T) {
 		t.Fatal(err)
 	}
 	contains(t, buf.String(),
-		"# ailuros-eval report",
+		"# decision-waf-eval report",
 		"> **Warning:** 2 of 11 requests failed",
 		"| 0.750 | 0.750 | 0.750 | 0.200 | 3 | 1 | 4 | 1 |",
 		"| sqli | 3 | 2 | 0.667 | 1 | 1 |",

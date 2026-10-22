@@ -87,7 +87,7 @@ func TestAllowBuildsRequestAndAddsRequestID(t *testing.T) {
 	id := h.last.Last().RequestID
 	want := &authv3.CheckResponse{
 		Status:       &rpcstatus.Status{Code: int32(codes.OK)},
-		HttpResponse: &authv3.CheckResponse_OkResponse{OkResponse: &authv3.OkHttpResponse{Headers: []*corev3.HeaderValueOption{setHeader("x-ailuros-request-id", id)}}},
+		HttpResponse: &authv3.CheckResponse_OkResponse{OkResponse: &authv3.OkHttpResponse{Headers: []*corev3.HeaderValueOption{setHeader("x-decision-waf-request-id", id)}}},
 	}
 	if !proto.Equal(resp, want) {
 		t.Errorf("response = %v\nwant %v", resp, want)
@@ -152,7 +152,7 @@ func TestDenials(t *testing.T) {
 				Status: &rpcstatus.Status{Code: int32(c.code), Message: c.msg},
 				HttpResponse: &authv3.CheckResponse_DeniedResponse{DeniedResponse: &authv3.DeniedHttpResponse{
 					Status:  &typev3.HttpStatus{Code: c.http},
-					Headers: []*corev3.HeaderValueOption{setHeader("x-ailuros-request-id", id), setHeader("content-type", "application/json")},
+					Headers: []*corev3.HeaderValueOption{setHeader("x-decision-waf-request-id", id), setHeader("content-type", "application/json")},
 					Body:    `{"error":"` + c.msg + `","request_id":"` + id + `"}`,
 				}},
 			}
@@ -175,12 +175,12 @@ func TestExposeVerdict(t *testing.T) {
 	resp := check(t, h, checkRequest("/attack"))
 	var got string
 	for _, o := range resp.GetDeniedResponse().GetHeaders() {
-		if o.GetHeader().GetKey() == "x-ailuros-decision" {
+		if o.GetHeader().GetKey() == "x-decision-waf-decision" {
 			got = o.GetHeader().GetValue()
 		}
 	}
 	if got != "block; attack_score=0.990; category=sqli; confidence=0.990" {
-		t.Errorf("x-ailuros-decision = %q", got)
+		t.Errorf("x-decision-waf-decision = %q", got)
 	}
 	if strings.Contains(resp.GetDeniedResponse().GetBody(), "sqli") {
 		t.Error("category leaked in the body")
@@ -313,16 +313,16 @@ func TestJA4Header(t *testing.T) {
 		name, header, want string
 		kept               bool
 	}{
-		{"on", "x-ailuros-ja4", fp, false},
+		{"on", "x-decision-waf-ja4", fp, false},
 		{"off", "", "", true},
 	} {
 		f := fake.Attacks()
 		h := newHarnessJA4(t, f, policy.FailOpen, inspect.ModeLite, false, c.header, nil)
 		req := checkRequest("/")
-		req.Attributes.Request.Http.Headers["x-ailuros-ja4"] = fp
+		req.Attributes.Request.Http.Headers["x-decision-waf-ja4"] = fp
 		check(t, h, req)
 		r := f.Last()
-		if _, kept := r.Headers["x-ailuros-ja4"]; r.JA4 != c.want || kept != c.kept {
+		if _, kept := r.Headers["x-decision-waf-ja4"]; r.JA4 != c.want || kept != c.kept {
 			t.Errorf("%s: JA4 %q, header kept %v", c.name, r.JA4, kept)
 		}
 	}

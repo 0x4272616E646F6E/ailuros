@@ -31,5 +31,5 @@ func TestEnvoyLite(t *testing.T) {
 
 	grpcUnaryCases(t, s)
 
-	failClosedWhenAilurosDown(t, s, http.StatusInternalServerError, nil)
+	failClosedWhenDecisionWafDown(t, s, http.StatusInternalServerError, nil)
 }

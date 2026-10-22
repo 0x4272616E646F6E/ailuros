@@ -92,81 +92,81 @@ func Load(lookup func(string) (string, bool), readFile func(string) ([]byte, err
 
 	var c Config
 	var err error
-	c.InspectionMode = parsed(get, fail, "AILUROS_INSPECTION_MODE", "standard", inspect.ParseMode)
-	c.FailureMode = parsed(get, fail, "AILUROS_FAILURE_MODE", "open", policy.ParseFailureMode)
-	c.BadOutput = parsed(get, fail, "AILUROS_BAD_OUTPUT", string(policy.BadOutputBlock), policy.ParseBadOutput)
-	c.BlockThreshold, err = strconv.ParseFloat(get("AILUROS_BLOCK_THRESHOLD", "0.8"), 64)
+	c.InspectionMode = parsed(get, fail, "DECISION_WAF_INSPECTION_MODE", "standard", inspect.ParseMode)
+	c.FailureMode = parsed(get, fail, "DECISION_WAF_FAILURE_MODE", "open", policy.ParseFailureMode)
+	c.BadOutput = parsed(get, fail, "DECISION_WAF_BAD_OUTPUT", string(policy.BadOutputBlock), policy.ParseBadOutput)
+	c.BlockThreshold, err = strconv.ParseFloat(get("DECISION_WAF_BLOCK_THRESHOLD", "0.8"), 64)
 	if err != nil || !(c.BlockThreshold > 0 && c.BlockThreshold <= 1) {
-		fail("AILUROS_BLOCK_THRESHOLD", errors.New("must be a number in (0, 1]"))
+		fail("DECISION_WAF_BLOCK_THRESHOLD", errors.New("must be a number in (0, 1]"))
 	}
-	c.BodyMaxBytes = positive("AILUROS_BODY_MAX_BYTES", strconv.Itoa(DefaultBodyMaxBytes), 0)
+	c.BodyMaxBytes = positive("DECISION_WAF_BODY_MAX_BYTES", strconv.Itoa(DefaultBodyMaxBytes), 0)
 
-	c.Backend = get("AILUROS_CLASSIFIER_BACKEND", "")
+	c.Backend = get("DECISION_WAF_CLASSIFIER_BACKEND", "")
 	switch defaultURL, known := defaultBaseURL[c.Backend]; {
 	case c.Backend == "":
-		fail("AILUROS_CLASSIFIER_BACKEND", errors.New("required (jev or openai)"))
+		fail("DECISION_WAF_CLASSIFIER_BACKEND", errors.New("required (jev or openai)"))
 	case !known:
-		fail("AILUROS_CLASSIFIER_BACKEND", fmt.Errorf("unknown backend %q (want jev or openai)", c.Backend))
+		fail("DECISION_WAF_CLASSIFIER_BACKEND", fmt.Errorf("unknown backend %q (want jev or openai)", c.Backend))
 	default:
-		c.BaseURL = get("AILUROS_CLASSIFIER_BASE_URL", defaultURL)
+		c.BaseURL = get("DECISION_WAF_CLASSIFIER_BASE_URL", defaultURL)
 		if err := checkBaseURL(c.BaseURL); err != nil {
-			fail("AILUROS_CLASSIFIER_BASE_URL", err)
+			fail("DECISION_WAF_CLASSIFIER_BASE_URL", err)
 		}
 	}
-	if c.Model = get("AILUROS_CLASSIFIER_MODEL", ""); c.Model == "" {
-		fail("AILUROS_CLASSIFIER_MODEL", errors.New("required"))
+	if c.Model = get("DECISION_WAF_CLASSIFIER_MODEL", ""); c.Model == "" {
+		fail("DECISION_WAF_CLASSIFIER_MODEL", errors.New("required"))
 	}
 
-	key, _ := lookup("AILUROS_CLASSIFIER_API_KEY")
+	key, _ := lookup("DECISION_WAF_CLASSIFIER_API_KEY")
 	key = strings.TrimSpace(key)
-	keyFile, _ := lookup("AILUROS_CLASSIFIER_API_KEY_FILE")
+	keyFile, _ := lookup("DECISION_WAF_CLASSIFIER_API_KEY_FILE")
 	hasKey, hasFile := key != "", keyFile != ""
 	switch {
 	case hasKey && hasFile:
-		fail("AILUROS_CLASSIFIER_API_KEY_FILE", errors.New("set AILUROS_CLASSIFIER_API_KEY or AILUROS_CLASSIFIER_API_KEY_FILE, not both"))
+		fail("DECISION_WAF_CLASSIFIER_API_KEY_FILE", errors.New("set DECISION_WAF_CLASSIFIER_API_KEY or DECISION_WAF_CLASSIFIER_API_KEY_FILE, not both"))
 	case hasFile:
 		data, err := readFile(keyFile)
 		c.APIKey = Secret(strings.TrimSpace(string(data)))
 		switch {
 		case err != nil:
-			fail("AILUROS_CLASSIFIER_API_KEY_FILE", fmt.Errorf("cannot read the file (%s); the value must be a file path, and it is not shown in case it is the key itself", readError(err)))
+			fail("DECISION_WAF_CLASSIFIER_API_KEY_FILE", fmt.Errorf("cannot read the file (%s); the value must be a file path, and it is not shown in case it is the key itself", readError(err)))
 		case c.APIKey == "":
-			fail("AILUROS_CLASSIFIER_API_KEY_FILE", fmt.Errorf("%s is empty", keyFile))
+			fail("DECISION_WAF_CLASSIFIER_API_KEY_FILE", fmt.Errorf("%s is empty", keyFile))
 		}
 	default:
 		c.APIKey = Secret(key)
 	}
 
-	c.Timeout, err = time.ParseDuration(get("AILUROS_CLASSIFIER_TIMEOUT", DefaultClassifierTimeout.String()))
+	c.Timeout, err = time.ParseDuration(get("DECISION_WAF_CLASSIFIER_TIMEOUT", DefaultClassifierTimeout.String()))
 	if err != nil || c.Timeout <= 0 {
-		fail("AILUROS_CLASSIFIER_TIMEOUT", errors.New("must be a positive duration such as 1s or 750ms"))
+		fail("DECISION_WAF_CLASSIFIER_TIMEOUT", errors.New("must be a positive duration such as 1s or 750ms"))
 	}
-	if c.DeepMaxBytes = positive("AILUROS_DEEP_MAX_BYTES", strconv.Itoa(DefaultBodyMaxBytes), 0); c.DeepMaxBytes > MaxDeepMaxBytes {
-		fail("AILUROS_DEEP_MAX_BYTES", fmt.Errorf("must be at most %d (64 MiB): deep mode holds up to this many bytes per stream", MaxDeepMaxBytes))
+	if c.DeepMaxBytes = positive("DECISION_WAF_DEEP_MAX_BYTES", strconv.Itoa(DefaultBodyMaxBytes), 0); c.DeepMaxBytes > MaxDeepMaxBytes {
+		fail("DECISION_WAF_DEEP_MAX_BYTES", fmt.Errorf("must be at most %d (64 MiB): deep mode holds up to this many bytes per stream", MaxDeepMaxBytes))
 	}
-	c.DeepOversize = parsed(get, fail, "AILUROS_DEEP_OVERSIZE", "classify_prefix", inspect.ParseOversize)
-	c.DeepMaxMessages = positive("AILUROS_DEEP_MAX_MESSAGES", "100", MaxDeepMaxMessages)
-	c.ExtProcAddr = get("AILUROS_EXTPROC_ADDR", DefaultExtProcAddr)
-	c.ExtAuthzAddr = get("AILUROS_EXTAUTHZ_ADDR", "")
-	c.ForwardAuthAddr = get("AILUROS_FORWARDAUTH_ADDR", DefaultForwardAuthAddr)
-	if c.MetricsAddr = get("AILUROS_METRICS_ADDR", DefaultMetricsAddr); c.MetricsAddr == "" {
-		fail("AILUROS_METRICS_ADDR", errors.New("must not be empty; it serves /metrics, /healthz, and /readyz"))
+	c.DeepOversize = parsed(get, fail, "DECISION_WAF_DEEP_OVERSIZE", "classify_prefix", inspect.ParseOversize)
+	c.DeepMaxMessages = positive("DECISION_WAF_DEEP_MAX_MESSAGES", "100", MaxDeepMaxMessages)
+	c.ExtProcAddr = get("DECISION_WAF_EXTPROC_ADDR", DefaultExtProcAddr)
+	c.ExtAuthzAddr = get("DECISION_WAF_EXTAUTHZ_ADDR", "")
+	c.ForwardAuthAddr = get("DECISION_WAF_FORWARDAUTH_ADDR", DefaultForwardAuthAddr)
+	if c.MetricsAddr = get("DECISION_WAF_METRICS_ADDR", DefaultMetricsAddr); c.MetricsAddr == "" {
+		fail("DECISION_WAF_METRICS_ADDR", errors.New("must not be empty; it serves /metrics, /healthz, and /readyz"))
 	}
-	c.PolicyFile = get("AILUROS_POLICY_FILE", "")
-	if err := c.LogLevel.UnmarshalText([]byte(get("AILUROS_LOG_LEVEL", "info"))); err != nil {
-		fail("AILUROS_LOG_LEVEL", errors.New("must be debug, info, warn, or error"))
+	c.PolicyFile = get("DECISION_WAF_POLICY_FILE", "")
+	if err := c.LogLevel.UnmarshalText([]byte(get("DECISION_WAF_LOG_LEVEL", "info"))); err != nil {
+		fail("DECISION_WAF_LOG_LEVEL", errors.New("must be debug, info, warn, or error"))
 	}
-	if c.ExposeVerdict, err = strconv.ParseBool(get("AILUROS_EXPOSE_VERDICT", "false")); err != nil {
-		fail("AILUROS_EXPOSE_VERDICT", errors.New("must be true or false"))
+	if c.ExposeVerdict, err = strconv.ParseBool(get("DECISION_WAF_EXPOSE_VERDICT", "false")); err != nil {
+		fail("DECISION_WAF_EXPOSE_VERDICT", errors.New("must be true or false"))
 	}
-	switch c.JA4Header = strings.ToLower(strings.TrimSpace(get("AILUROS_JA4_HEADER", ""))); {
+	switch c.JA4Header = strings.ToLower(strings.TrimSpace(get("DECISION_WAF_JA4_HEADER", ""))); {
 	case c.JA4Header == "":
 	case strings.HasPrefix(c.JA4Header, ":"):
-		fail("AILUROS_JA4_HEADER", fmt.Errorf("%q is a pseudo-header", c.JA4Header))
+		fail("DECISION_WAF_JA4_HEADER", fmt.Errorf("%q is a pseudo-header", c.JA4Header))
 	case !inspect.IsToken(c.JA4Header):
-		fail("AILUROS_JA4_HEADER", fmt.Errorf("%q is not a header name", c.JA4Header))
+		fail("DECISION_WAF_JA4_HEADER", fmt.Errorf("%q is not a header name", c.JA4Header))
 	case inspect.IsInspectedHeader(c.JA4Header):
-		fail("AILUROS_JA4_HEADER", fmt.Errorf("%q is a header Ailuros inspects; reading the fingerprint removes the header, so name a dedicated one such as x-ailuros-ja4", c.JA4Header))
+		fail("DECISION_WAF_JA4_HEADER", fmt.Errorf("%q is a header decision-waf inspects; reading the fingerprint removes the header, so name a dedicated one such as x-decision-waf-ja4", c.JA4Header))
 	}
 
 	if len(errs) > 0 {

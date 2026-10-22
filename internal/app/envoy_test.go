@@ -64,8 +64,8 @@ func TestServesEnvoyFrontends(t *testing.T) {
 
 	_, metrics := get(t, "http://"+a.AdminAddr()+"/metrics")
 	for _, want := range []string{
-		`ailuros_decisions_total{category="sqli",frontend="extauthz",outcome="block",route="default"} 1`,
-		`ailuros_decisions_total{category="benign",frontend="extproc",outcome="allow",route="default"} 1`,
+		`decision_waf_decisions_total{category="sqli",frontend="extauthz",outcome="block",route="default"} 1`,
+		`decision_waf_decisions_total{category="benign",frontend="extproc",outcome="allow",route="default"} 1`,
 	} {
 		if !strings.Contains(metrics, want) {
 			t.Errorf("metrics missing %s", want)
@@ -112,7 +112,7 @@ func TestEnvoyDowngradeMetric(t *testing.T) {
 		t.Fatal(err)
 	}
 	_, metrics := get(t, "http://"+a.AdminAddr()+"/metrics")
-	if want := `ailuros_mode_downgrades_total{frontend="extauthz"} 1`; !strings.Contains(metrics, want) {
+	if want := `decision_waf_mode_downgrades_total{frontend="extauthz"} 1`; !strings.Contains(metrics, want) {
 		t.Errorf("metrics missing %s", want)
 	}
 }
@@ -135,7 +135,7 @@ func TestDeepOversizeAllowWarning(t *testing.T) {
 	}
 	a.closeListeners()
 	signal.Stop(a.hup)
-	if !strings.Contains(buf.String(), "AILUROS_DEEP_OVERSIZE=allow") {
+	if !strings.Contains(buf.String(), "DECISION_WAF_DEEP_OVERSIZE=allow") {
 		t.Errorf("missing oversize warning; log:\n%s", buf.String())
 	}
 }

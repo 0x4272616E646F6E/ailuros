@@ -8,11 +8,11 @@ patches:
       apiVersion: apps/v1
       kind: Deployment
       metadata:
-        name: ailuros
+        name: decision-waf
       spec:
         template:
           spec:
             containers:
-              - name: ailuros
+              - name: decision-waf
                 env:
-                  - { name: AILUROS_INSPECTION_MODE, value: standard }
+                  - { name: DECISION_WAF_INSPECTION_MODE, value: standard }

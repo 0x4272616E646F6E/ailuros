@@ -18,8 +18,8 @@ import (
 	"github.com/0x4272616E646F6E/decision-waf/internal/policy"
 )
 
-const RequestIDHeader = "x-ailuros-request-id"
-const DecisionHeader = "x-ailuros-decision"
+const RequestIDHeader = "x-decision-waf-request-id"
+const DecisionHeader = "x-decision-waf-decision"
 const DenialContentType = "application/json"
 
 func DecisionHeaders(d decision.Decision, exposeVerdict bool, set func(name, value string)) {

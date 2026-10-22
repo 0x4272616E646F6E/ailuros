@@ -41,14 +41,14 @@ func TestSampleHasNoStubMarkers(t *testing.T) {
 }
 
 func TestModelProfile(t *testing.T) {
-	modelURL := os.Getenv("AILUROS_IT_MODEL_URL")
+	modelURL := os.Getenv("DECISION_WAF_IT_MODEL_URL")
 	if modelURL == "" {
 		t.Skip("set MODEL_URL and MODEL (make test-integration-model) to profile a real model")
 	}
-	timeout := cmp.Or(os.Getenv("AILUROS_IT_MODEL_TIMEOUT"), "10s")
+	timeout := cmp.Or(os.Getenv("DECISION_WAF_IT_MODEL_TIMEOUT"), "10s")
 	d, err := time.ParseDuration(timeout)
 	if err != nil {
-		t.Fatalf("AILUROS_IT_MODEL_TIMEOUT: %v", err)
+		t.Fatalf("DECISION_WAF_IT_MODEL_TIMEOUT: %v", err)
 	}
 	cfg, err := os.ReadFile("../../deploy/envoy/lite.yaml")
 	if err != nil {
@@ -67,12 +67,12 @@ func TestModelProfile(t *testing.T) {
 		t.Fatal(err)
 	}
 	s := up(t, "envoy-lite", map[string]string{
-		"ENVOY_LITE_CONFIG":           cfgPath,
-		"AILUROS_CLASSIFIER_TIMEOUT":  timeout,
-		"AILUROS_CLASSIFIER_BASE_URL": modelURL,
-		"AILUROS_CLASSIFIER_MODEL":    os.Getenv("AILUROS_IT_MODEL"),
-		"AILUROS_CLASSIFIER_BACKEND":  cmp.Or(os.Getenv("AILUROS_IT_MODEL_BACKEND"), "jev"),
-		"AILUROS_CLASSIFIER_API_KEY":  os.Getenv("AILUROS_IT_MODEL_API_KEY"),
+		"ENVOY_LITE_CONFIG":                cfgPath,
+		"DECISION_WAF_CLASSIFIER_TIMEOUT":  timeout,
+		"DECISION_WAF_CLASSIFIER_BASE_URL": modelURL,
+		"DECISION_WAF_CLASSIFIER_MODEL":    os.Getenv("DECISION_WAF_IT_MODEL"),
+		"DECISION_WAF_CLASSIFIER_BACKEND":  cmp.Or(os.Getenv("DECISION_WAF_IT_MODEL_BACKEND"), "jev"),
+		"DECISION_WAF_CLASSIFIER_API_KEY":  os.Getenv("DECISION_WAF_IT_MODEL_API_KEY"),
 	})
 	var report strings.Builder
 	fmt.Fprintf(&report, "%-14s %-11s %-6s %-9s %-14s %s\n", "label", "outcome", "score", "latency", "category", "request")
@@ -97,7 +97,7 @@ func TestModelProfile(t *testing.T) {
 			target += "?" + e.Query
 		}
 		resp := s.Send(t, "http1", Request{Method: e.Method, Path: target, Header: h})
-		id := resp.Header.Get("X-Ailuros-Request-Id")
+		id := resp.Header.Get("X-Decision-Waf-Request-Id")
 		if resp.Status == http.StatusOK {
 			id = upstreamID(t, echoed(t, resp))
 		}
@@ -114,5 +114,5 @@ func TestModelProfile(t *testing.T) {
 	fmt.Fprintf(&report, "attacks blocked %d/%d, benign blocked %d/%d, undecided (failure mode) %d\n",
 		tally["attack block"], attacks, tally["benign block"], benign,
 		tally["attack fail_open"]+tally["attack fail_closed"]+tally["benign fail_open"]+tally["benign fail_closed"])
-	t.Logf("model %s at %s:\n%s", os.Getenv("AILUROS_IT_MODEL"), modelURL, report.String())
+	t.Logf("model %s at %s:\n%s", os.Getenv("DECISION_WAF_IT_MODEL"), modelURL, report.String())
 }

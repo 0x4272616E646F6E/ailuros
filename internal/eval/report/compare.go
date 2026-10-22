@@ -26,8 +26,8 @@ func Compare(w io.Writer, a, b *results.File, o metrics.Options) error {
 		name string
 		h    results.Header
 	}{{"A", a.Header}, {"B", b.Header}} {
-		fmt.Fprintf(&buf, "%s  %s / %s on %s (sha256 %s%s), ailuros %s\n", r.name, r.h.Backend, r.h.Model,
-			r.h.Dataset.Name, short(r.h.Dataset.SHA256), sampleNote(r.h), r.h.AilurosVersion)
+		fmt.Fprintf(&buf, "%s  %s / %s on %s (sha256 %s%s), decision-waf %s\n", r.name, r.h.Backend, r.h.Model,
+			r.h.Dataset.Name, short(r.h.Dataset.SHA256), sampleNote(r.h), r.h.DecisionWafVersion)
 	}
 	if pa, pb := max(a.Header.PromptVersion, 1), max(b.Header.PromptVersion, 1); pa != pb {
 		fmt.Fprintf(&buf, "warning: prompt versions differ (A %d, B %d); scores are not directly comparable\n", pa, pb)

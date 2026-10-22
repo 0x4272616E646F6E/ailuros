@@ -1,11 +1,11 @@
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: ailuros
+  name: decision-waf
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/name: ailuros
+      app.kubernetes.io/name: decision-waf
   policyTypes: [Ingress]
   ingress:
     - from:

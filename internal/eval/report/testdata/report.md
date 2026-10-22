@@ -1,4 +1,4 @@
-# ailuros-eval report
+# decision-waf-eval report
 
 | | |
 |---|---|
@@ -6,7 +6,7 @@
 | Backend | jev, model `d1-3b` |
 | Policy | default |
 | Threshold | 0.8 (run: 0.8) |
-| Ailuros | dev |
+| decision-waf | dev |
 | Started | 2026-10-13T12:00:00Z |
 | Requests | 11 (9 scored, 2 errors) |
 

@@ -146,7 +146,7 @@ func Load(path string) (*Policy, error) {
 	if path == "" {
 		return Default(), nil
 	}
-	data, err := os.ReadFile(path) //nolint:gosec // G304: the path is the operator's AILUROS_POLICY_FILE
+	data, err := os.ReadFile(path) //nolint:gosec // G304: the path is the operator's DECISION_WAF_POLICY_FILE
 	if err != nil {
 		return nil, fmt.Errorf("policy: %w", err)
 	}

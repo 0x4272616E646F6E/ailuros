@@ -23,7 +23,7 @@ func TestEnvoyStandard(t *testing.T) {
 
 	bodyCases(t, s)
 
-	t.Run("body over AILUROS_BODY_MAX_BYTES is classified on its prefix", func(t *testing.T) {
+	t.Run("body over DECISION_WAF_BODY_MAX_BYTES is classified on its prefix", func(t *testing.T) {
 		m := newMarker(t)
 		body := largeBody(m, 20000, " attack")
 		v := echoed(t, s.Send(t, "http1", Request{Method: "POST", Path: "/upload", Body: body}))
@@ -47,9 +47,9 @@ func TestEnvoyStandard(t *testing.T) {
 		if resp.Status/100 == 2 && resp.Header.Get("Grpc-Status") == "" {
 			t.Fatalf("status %d without grpc-status: the request was not denied; body %s", resp.Status, resp.Body)
 		}
-		id := resp.Header.Get("X-Ailuros-Request-Id")
+		id := resp.Header.Get("X-Decision-Waf-Request-Id")
 		if id == "" {
-			t.Fatalf("denial has no X-Ailuros-Request-Id (status %d, grpc-status %q)", resp.Status, resp.Header.Get("Grpc-Status"))
+			t.Fatalf("denial has no X-Decision-Waf-Request-Id (status %d, grpc-status %q)", resp.Status, resp.Header.Get("Grpc-Status"))
 		}
 		s.WantDecision(t, id, "block", "")
 		if seen := s.Seen(t, m); len(seen) != 0 {
@@ -75,5 +75,5 @@ func TestEnvoyStandard(t *testing.T) {
 		}
 	})
 
-	failClosedWhenAilurosDown(t, s, http.StatusInternalServerError, nil)
+	failClosedWhenDecisionWafDown(t, s, http.StatusInternalServerError, nil)
 }

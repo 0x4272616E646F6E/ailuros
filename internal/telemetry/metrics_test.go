@@ -20,10 +20,10 @@ func TestMetricsHandlerExposesSeries(t *testing.T) {
 	m.Handler().ServeHTTP(rr, httptest.NewRequest("GET", "/metrics", nil))
 	body, _ := io.ReadAll(rr.Body)
 	for _, want := range []string{
-		`ailuros_circuit_breaker_state{backend="jev"} 2`,
-		`ailuros_mode_downgrades_total{frontend="forwardauth"} 1`,
-		`ailuros_policy_reloads_total{result="success"} 1`,
-		`ailuros_policy_reloads_total{result="failure"} 1`,
+		`decision_waf_circuit_breaker_state{backend="jev"} 2`,
+		`decision_waf_mode_downgrades_total{frontend="forwardauth"} 1`,
+		`decision_waf_policy_reloads_total{result="success"} 1`,
+		`decision_waf_policy_reloads_total{result="failure"} 1`,
 		`go_goroutines`,
 	} {
 		if !strings.Contains(string(body), want) {

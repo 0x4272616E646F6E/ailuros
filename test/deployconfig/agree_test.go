@@ -8,8 +8,8 @@ import (
 )
 
 var (
-	ailurosFilter  = regexp.MustCompile(`^(\s*)- name: envoy\.filters\.http\.(ext_proc|ext_authz)$`)
-	ailurosAddress = regexp.MustCompile(`(address: ailuros, port_value: )\d+`)
+	decisionWafFilter  = regexp.MustCompile(`^(\s*)- name: envoy\.filters\.http\.(ext_proc|ext_authz)$`)
+	decisionWafAddress = regexp.MustCompile(`(address: decision-waf, port_value: )\d+`)
 )
 
 type line struct {
@@ -28,8 +28,8 @@ func commonPart(name string, data []byte) []line {
 	var out []line
 	for i := 0; i < len(lines); i++ {
 		l := lines[i]
-		if m := ailurosFilter.FindStringSubmatch(l.text); m != nil {
-			out = append(out, line{l.n, m[1] + "- (the Ailuros filter)"})
+		if m := decisionWafFilter.FindStringSubmatch(l.text); m != nil {
+			out = append(out, line{l.n, m[1] + "- (the decision-waf filter)"})
 			for i+1 < len(lines) && strings.HasPrefix(lines[i+1].text, m[1]+"  ") {
 				i++
 			}
@@ -47,7 +47,7 @@ func commonPart(name string, data []byte) []line {
 				continue
 			}
 		}
-		out = append(out, line{l.n, ailurosAddress.ReplaceAllString(l.text, "${1}(port)")})
+		out = append(out, line{l.n, decisionWafAddress.ReplaceAllString(l.text, "${1}(port)")})
 	}
 	return out
 }
@@ -56,7 +56,7 @@ func extProcFilter(data []byte) []line {
 	var out []line
 	in := ""
 	for i, text := range strings.Split(string(data), "\n") {
-		if m := ailurosFilter.FindStringSubmatch(text); m != nil {
+		if m := decisionWafFilter.FindStringSubmatch(text); m != nil {
 			in = m[1]
 		} else if in == "" || !strings.HasPrefix(text, in+"  ") {
 			in = ""

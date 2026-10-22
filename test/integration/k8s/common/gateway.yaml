@@ -17,7 +17,7 @@ spec:
     - backendRefs: [{ name: app, port: 8080 }]
       filters:
         - type: RequestHeaderModifier
-          requestHeaderModifier: { remove: [x-ailuros-ja4] }
+          requestHeaderModifier: { remove: [x-decision-waf-ja4] }
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: GRPCRoute

@@ -1,4 +1,4 @@
-{"ailuros_eval_results":1,"dataset":{"path":"eval/datasets/fixture.jsonl","name":"fixture","sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","entries":11},"backend":"openai","model":"local-llm","threshold":0.8,"policy":"default","body_max_bytes":16384,"ailuros_version":"dev","started":"2026-10-13T13:00:00Z"}
+{"decision_waf_eval_results":1,"dataset":{"path":"eval/datasets/fixture.jsonl","name":"fixture","sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","entries":11},"backend":"openai","model":"local-llm","threshold":0.8,"policy":"default","body_max_bytes":16384,"decision_waf_version":"dev","started":"2026-10-13T13:00:00Z"}
 {"id":"a-1","label":"sqli","tags":["query"],"attack_score":0.99,"category":"sqli","outcome":"block","latency_ms":50}
 {"id":"a-2","label":"sqli","tags":["query"],"attack_score":0.97,"category":"sqli","outcome":"block","latency_ms":100}
 {"id":"a-3","label":"sqli","tags":["path"],"attack_score":0.91,"category":"sqli","outcome":"block","latency_ms":150}

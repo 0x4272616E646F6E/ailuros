@@ -103,7 +103,7 @@ func TestServesDecisions(t *testing.T) {
 		t.Errorf("/attack = %d, want 403", got)
 	}
 	_, metrics := get(t, "http://"+a.AdminAddr()+"/metrics")
-	want := `ailuros_decisions_total{category="sqli",frontend="forwardauth",outcome="block",route="default"} 1`
+	want := `decision_waf_decisions_total{category="sqli",frontend="forwardauth",outcome="block",route="default"} 1`
 	if !strings.Contains(metrics, want) {
 		t.Errorf("metrics missing %s", want)
 	}
@@ -160,7 +160,7 @@ func TestReloadKeepsLastGoodPolicy(t *testing.T) {
 		t.Errorf("/admin after bad reload = %d, want 503 (last good policy kept)", got)
 	}
 	_, metrics := get(t, "http://"+a.AdminAddr()+"/metrics")
-	if !strings.Contains(metrics, `ailuros_policy_reloads_total{result="failure"}`) {
+	if !strings.Contains(metrics, `decision_waf_policy_reloads_total{result="failure"}`) {
 		t.Error("failed reload not counted")
 	}
 }
@@ -222,14 +222,14 @@ func TestUnrelatedFileDoesNotReload(t *testing.T) {
 	writePolicy(t, filepath.Join(dir, "other.yaml"), "x: 1\n")
 	time.Sleep(600 * time.Millisecond)
 	_, metrics := get(t, "http://"+a.AdminAddr()+"/metrics")
-	if strings.Contains(metrics, `ailuros_policy_reloads_total{result="success"}`) {
+	if strings.Contains(metrics, `decision_waf_policy_reloads_total{result="success"}`) {
 		t.Error("unrelated file triggered a policy reload")
 	}
 }
 
 func TestStartupWarnings(t *testing.T) {
 	const debugWarn = "debug logging writes redacted, truncated request bodies to logs"
-	const exposeWarn = "AILUROS_EXPOSE_VERDICT sends classification categories to clients; use only for testing"
+	const exposeWarn = "DECISION_WAF_EXPOSE_VERDICT sends classification categories to clients; use only for testing"
 	cases := []struct {
 		name               string
 		level              slog.Level

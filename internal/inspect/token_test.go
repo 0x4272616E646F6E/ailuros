@@ -17,7 +17,7 @@ func TestIsToken(t *testing.T) {
 	for _, c := range []struct {
 		s    string
 		want bool
-	}{{"", false}, {"GET", true}, {"x-ailuros-ja4", true}, {"a b", false}, {"a:b", false}, {"é", false}, {"chat.v1", true}} {
+	}{{"", false}, {"GET", true}, {"x-decision-waf-ja4", true}, {"a b", false}, {"a:b", false}, {"é", false}, {"chat.v1", true}} {
 		if got := IsToken(c.s); got != c.want {
 			t.Errorf("IsToken(%q) = %v, want %v", c.s, got, c.want)
 		}

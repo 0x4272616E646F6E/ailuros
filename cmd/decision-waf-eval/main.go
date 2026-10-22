@@ -18,13 +18,13 @@ import (
 )
 
 const usage = `usage:
-  ailuros-eval run     --dataset FILE [--out FILE] [--sample N] [--seed 1] [--concurrency 1] [--resume]
-  ailuros-eval report  RESULTS [--threshold T] [--max-fpr 0.01] [--by-tag] [--json|--markdown]
-  ailuros-eval compare A B [--threshold T] [--max-fpr 0.01] [--allow-different-datasets]
+  decision-waf-eval run     --dataset FILE [--out FILE] [--sample N] [--seed 1] [--concurrency 1] [--resume]
+  decision-waf-eval report  RESULTS [--threshold T] [--max-fpr 0.01] [--by-tag] [--json|--markdown]
+  decision-waf-eval compare A B [--threshold T] [--max-fpr 0.01] [--allow-different-datasets]
 
-run reads the classifier settings from the same AILUROS_* variables as ailuros:
-AILUROS_CLASSIFIER_BACKEND, _BASE_URL, _MODEL, _API_KEY (or _API_KEY_FILE),
-_TIMEOUT, AILUROS_POLICY_FILE, AILUROS_BLOCK_THRESHOLD, AILUROS_BODY_MAX_BYTES.
+run reads the classifier settings from the same DECISION_WAF_* variables as decision-waf:
+DECISION_WAF_CLASSIFIER_BACKEND, _BASE_URL, _MODEL, _API_KEY (or _API_KEY_FILE),
+_TIMEOUT, DECISION_WAF_POLICY_FILE, DECISION_WAF_BLOCK_THRESHOLD, DECISION_WAF_BODY_MAX_BYTES.
 Results default to bin/eval/<dataset>-<model>.jsonl.
 `
 
@@ -62,19 +62,19 @@ func (c cli) main(ctx context.Context, args []string) int {
 	case err == nil:
 		return 0
 	case errors.As(err, &ue):
-		fmt.Fprintf(c.stderr, "ailuros-eval: %v\n\n%s", err, usage)
+		fmt.Fprintf(c.stderr, "decision-waf-eval: %v\n\n%s", err, usage)
 		return 2
 	case errors.As(err, &ie):
-		fmt.Fprintf(c.stderr, "ailuros-eval: %v\n", err)
+		fmt.Fprintf(c.stderr, "decision-waf-eval: %v\n", err)
 		return 2
 	case errors.As(err, &inter):
-		fmt.Fprintf(c.stderr, "ailuros-eval: interrupted; rerun with --resume --out %s to continue\n", inter.path)
+		fmt.Fprintf(c.stderr, "decision-waf-eval: interrupted; rerun with --resume --out %s to continue\n", inter.path)
 		return 1
 	case errors.Is(err, context.Canceled):
-		fmt.Fprintln(c.stderr, "ailuros-eval: interrupted")
+		fmt.Fprintln(c.stderr, "decision-waf-eval: interrupted")
 		return 1
 	default:
-		fmt.Fprintf(c.stderr, "ailuros-eval: %v\n", err)
+		fmt.Fprintf(c.stderr, "decision-waf-eval: %v\n", err)
 		return 1
 	}
 }

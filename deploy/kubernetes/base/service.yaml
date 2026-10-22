@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: ailuros
+  name: decision-waf
   labels:
-    app.kubernetes.io/name: ailuros
+    app.kubernetes.io/name: decision-waf
     app.kubernetes.io/component: decision-service
 spec:
   selector:
-    app.kubernetes.io/name: ailuros
+    app.kubernetes.io/name: decision-waf
   ports:
     - { name: extproc, port: 9001, targetPort: extproc, appProtocol: kubernetes.io/h2c }
     - { name: extauthz, port: 9003, targetPort: extauthz, appProtocol: kubernetes.io/h2c }

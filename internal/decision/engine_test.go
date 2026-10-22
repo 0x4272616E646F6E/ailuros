@@ -272,11 +272,11 @@ func TestDecisionSpans(t *testing.T) {
 	}
 	byReason := map[string]sdktrace.ReadOnlySpan{}
 	for _, s := range spans {
-		if s.Name() != "ailuros.decide" {
+		if s.Name() != "decision_waf.decide" {
 			continue
 		}
 		for _, a := range s.Attributes() {
-			if a.Key == "ailuros.reason" {
+			if a.Key == "decision_waf.reason" {
 				byReason[a.Value.AsString()] = s
 			}
 		}

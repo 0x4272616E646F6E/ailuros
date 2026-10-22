@@ -4,8 +4,8 @@ static_resources:
       address:
         socket_address: { address: 0.0.0.0, port_value: 8080 }
       # JA4 (optional; needs TLS terminated here): uncomment this, the
-      # header_mutation filter below, and set AILUROS_JA4_HEADER=x-ailuros-ja4
-      # on Ailuros. The filter overwrites any x-ailuros-ja4 a client sends.
+      # header_mutation filter below, and set DECISION_WAF_JA4_HEADER=x-decision-waf-ja4
+      # on decision-waf. The filter overwrites any x-decision-waf-ja4 a client sends.
       # listener_filters:
       #   - name: envoy.filters.listener.tls_inspector
       #     typed_config:
@@ -36,13 +36,13 @@ static_resources:
                   #     mutations:
                   #       request_mutations:
                   #         - append:
-                  #             header: { key: x-ailuros-ja4, value: "%TLS_JA4_FINGERPRINT%" }
+                  #             header: { key: x-decision-waf-ja4, value: "%TLS_JA4_FINGERPRINT%" }
                   #             append_action: OVERWRITE_IF_EXISTS_OR_ADD
                   - name: envoy.filters.http.ext_proc
                     typed_config:
                       "@type": type.googleapis.com/envoy.extensions.filters.http.ext_proc.v3.ExternalProcessor
                       grpc_service:
-                        envoy_grpc: { cluster_name: ailuros }
+                        envoy_grpc: { cluster_name: decision-waf }
                       failure_mode_allow: false
                       message_timeout: 1.5s
                       request_attributes:
@@ -61,7 +61,7 @@ static_resources:
                     typed_config:
                       "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
   clusters:
-    - name: ailuros
+    - name: decision-waf
       type: STRICT_DNS
       connect_timeout: 1s
       typed_extension_protocol_options:
@@ -76,12 +76,12 @@ static_resources:
           healthy_threshold: 1
           grpc_health_check: {}
       load_assignment:
-        cluster_name: ailuros
+        cluster_name: decision-waf
         endpoints:
           - lb_endpoints:
               - endpoint:
                   address:
-                    socket_address: { address: ailuros, port_value: 9001 }
+                    socket_address: { address: decision-waf, port_value: 9001 }
     - name: app
       type: STRICT_DNS
       connect_timeout: 1s

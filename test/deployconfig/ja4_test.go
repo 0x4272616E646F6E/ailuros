@@ -109,11 +109,11 @@ func TestJA4BlockUncommented(t *testing.T) {
 			for _, f := range filters {
 				names = append(names, f.Name)
 			}
-			ailuros := "envoy.filters.http.ext_proc"
+			decisionWaf := "envoy.filters.http.ext_proc"
 			if name == "ext_authz.yaml" {
-				ailuros = "envoy.filters.http.ext_authz"
+				decisionWaf = "envoy.filters.http.ext_authz"
 			}
-			if want := []string{"envoy.filters.http.header_mutation", ailuros, "envoy.filters.http.router"}; strings.Join(names, " ") != strings.Join(want, " ") {
+			if want := []string{"envoy.filters.http.header_mutation", decisionWaf, "envoy.filters.http.router"}; strings.Join(names, " ") != strings.Join(want, " ") {
 				t.Fatalf("http_filters = %v, want %v", names, want)
 			}
 			muts := filters[0].TypedConfig.Mutations.RequestMutations
@@ -121,8 +121,8 @@ func TestJA4BlockUncommented(t *testing.T) {
 				t.Fatalf("header_mutation has %d request mutations, want 1", len(muts))
 			}
 			a := muts[0].Append
-			if a.Header.Key != "x-ailuros-ja4" || a.Header.Value != "%TLS_JA4_FINGERPRINT%" || a.AppendAction != "OVERWRITE_IF_EXISTS_OR_ADD" {
-				t.Errorf("mutation = %+v, want x-ailuros-ja4 overwritten with %%TLS_JA4_FINGERPRINT%%", a)
+			if a.Header.Key != "x-decision-waf-ja4" || a.Header.Value != "%TLS_JA4_FINGERPRINT%" || a.AppendAction != "OVERWRITE_IF_EXISTS_OR_ADD" {
+				t.Errorf("mutation = %+v, want x-decision-waf-ja4 overwritten with %%TLS_JA4_FINGERPRINT%%", a)
 			}
 		})
 	}
@@ -152,9 +152,9 @@ func TestJA4BlocksAreIdentical(t *testing.T) {
 }
 
 func TestEnvoyValidates(t *testing.T) {
-	image := os.Getenv("AILUROS_ENVOY_IMAGE")
+	image := os.Getenv("DECISION_WAF_ENVOY_IMAGE")
 	if image == "" {
-		t.Skip("set AILUROS_ENVOY_IMAGE (make validate-envoy) to validate with Envoy")
+		t.Skip("set DECISION_WAF_ENVOY_IMAGE (make validate-envoy) to validate with Envoy")
 	}
 	dir := t.TempDir()
 	for _, name := range envoyConfigs {
