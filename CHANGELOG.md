@@ -7,7 +7,17 @@ minor version may change behavior or configuration; the entry says how.
 
 ## [Unreleased]
 
+### Added
+
+- `eval/datasets/selfhosted.jsonl`: 271 semi-synthetic self-hosted requests
+  (headers only), with `eval/gen/selfhosted.py` to regenerate it, and reports
+  for `d1-3B` and `h2o-lightning-4b` on it.
+
 ### Documentation
+
+- Decision models served by llama.cpp server (`d1-3B`, `h2o-lightning-4b`)
+  use the `jev` backend (`/v1/systemone`); through `openai` they reason and
+  time out.
 
 - NGINX Gateway Fabric: the Ailuros NGINX module inspects every request on a
   route alongside tinyauth or another `auth_request` check, and how it applies

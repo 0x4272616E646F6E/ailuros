@@ -91,3 +91,32 @@ requests as raw HTTP text: parse each request's method, path, query, headers,
 and body, label the normal ones `benign` and the anomalous ones with the
 closest category from your policy, and write one line per request. Whatever
 the source, check the labels: the report can only be as right as they are.
+
+## The self-hosted dataset
+
+`eval/datasets/selfhosted.jsonl` is 271 semi-synthetic requests in the shape a
+self-hosted stack sees through forward-auth (headers only): 133 benign
+requests to apps such as Sonarr, Radarr, Jellyfin, Home Assistant, Vaultwarden
+and Forgejo from browsers and their own clients, 24 of them `lookalike`
+searches (`O'Brien`, `cat /etc`, `<3 love`), and 138 attacks: SQL injection,
+XSS, command and template injection including Log4Shell, path traversal,
+scanner probes and scanner user agents, payloads in custom headers, and
+scripted logins. `eval/gen/selfhosted.py` regenerates it byte for byte. It is
+large enough to compare models, but it is not recorded attack traffic, so
+check a threshold against your own traffic before relying on it.
+
+Two decision models served by llama.cpp server through the `jev` backend,
+`AILUROS_INSPECTION_MODE=lite` (reports in `eval/results/*-selfhosted.md`):
+
+| Threshold | Model | Precision | Recall | False-positive rate | F1 |
+|---|---|---|---|---|---|
+| 0.8 | `d1-3B` (Q8_0) | 0.985 | 0.486 | 0.008 | 0.650 |
+| 0.8 | `h2o-lightning-4b` (Q8_0) | 0.932 | 0.899 | 0.068 | 0.915 |
+| 0.9 | `d1-3B` | 1.000 | 0.362 | 0.000 | 0.532 |
+| 0.9 | `h2o-lightning-4b` | 0.945 | 0.877 | 0.053 | 0.910 |
+
+`h2o-lightning-4b` catches more than twice as many attacks and names the
+right category for 96% of them (`d1-3B`: 87%); most of its false positives
+are `lookalike` searches. Served through the `openai` backend instead, the
+same `d1-3B` reasons before answering and timed out on 269 of the 271
+requests at a 10 s timeout.

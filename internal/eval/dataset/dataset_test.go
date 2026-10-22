@@ -168,6 +168,25 @@ func TestShippedSample(t *testing.T) {
 	}
 }
 
+func TestShippedSelfhosted(t *testing.T) {
+	ds, err := LoadFile("../../../eval/datasets/selfhosted.jsonl", labels())
+	if err != nil {
+		t.Fatal(err)
+	}
+	counts := map[string]int{}
+	lookalikes := 0
+	for _, e := range ds.Entries {
+		counts[e.Label]++
+		if slices.Contains(e.Tags, "lookalike") {
+			lookalikes++
+		}
+	}
+	want := map[string]int{"benign": 133, "sqli": 27, "xss": 23, "path_traversal": 20, "rce": 30, "scanner": 30, "credential_stuffing": 8}
+	if !reflect.DeepEqual(counts, want) || lookalikes != 24 || ds.Header.Name != "selfhosted-2026-10" {
+		t.Errorf("selfhosted: labels %v, %d lookalikes, name %q", counts, lookalikes, ds.Header.Name)
+	}
+}
+
 func TestEntryMetadata(t *testing.T) {
 	e := Entry{ID: "1", Label: "benign", Method: "GET", Path: "/", Protocol: "HTTP/2", JA4: "t13d1516h2_8daaf6152771_b186095e22b6"}
 	r := e.Request(1024)

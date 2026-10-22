@@ -76,3 +76,13 @@ Checked on 2026-10-14 with Ailuros's own probe and the shipped sample:
 outside the list still got one from the list. A server that accepts
 `json_schema` but does not enforce it is reported at startup, and its
 answers outside the label set follow `AILUROS_BAD_OUTPUT`.
+
+**Decision models.** Models built for llama.cpp server's decision API
+(`POST /v1/systemone`), such as LiquidAI's `d1-3B` and H2O.ai's
+`h2o-lightning-4b`, use the `jev` backend with the server's base URL without
+`/v1` (for example `http://localhost:8080`); the API key is optional. They
+score every category in one pass and generate no tokens: on an RTX 4000 SFF
+Ada a check takes about 0.1–0.2 s. Served through the `openai` backend they
+reason before answering, run into the timeout, and misclassify ordinary
+requests. `h2o-lightning-4b` needs llama.cpp server build 11773 or later.
+[Evaluating models](evaluation.md#the-self-hosted-dataset) compares the two.

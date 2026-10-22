@@ -1,4 +1,4 @@
-> Illustrative example of ailuros-eval output: `mradermacher/h2o-lightning-4b` (a GGUF build of H2O.ai's h2o-lightning-4b, served by LM Studio, `openai` backend, `AILUROS_CLASSIFIER_TIMEOUT=60s`) on the 24-request shipped sample. It is a reasoning model, so each call includes its thinking time. The sample is far too small to choose a threshold with; this is not a recommendation.
+> Illustrative example of ailuros-eval output: `mradermacher/h2o-lightning-4b` (a GGUF build of H2O.ai's h2o-lightning-4b, served by LM Studio, `openai` backend, `AILUROS_CLASSIFIER_TIMEOUT=60s`) on the 24-request shipped sample. Through a chat API it reasons before answering, so each call includes its thinking time; served by llama.cpp server through the `jev` backend it does not (see `h2o-lightning-4b-selfhosted.md`). The sample is far too small to choose a threshold with; this is not a recommendation.
 
 # ailuros-eval report
 
