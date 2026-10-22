@@ -1,11 +1,34 @@
 # Changelog
 
-All notable changes to Ailuros are listed here. The format follows
+All notable changes to decision-waf are listed here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Before 1.0, a
 minor version may change behavior or configuration; the entry says how.
 
-## [Unreleased]
+## [0.2.0] - 2026-10-22
+
+### Changed (breaking)
+
+- The project is renamed from Ailuros to decision-waf. There are no
+  compatibility aliases: rename every setting below when upgrading.
+  decision-waf and `decision-waf-eval run` refuse to start while any
+  `AILUROS_*` variable is set, and name the `DECISION_WAF_*` replacement for
+  each. Datasets and results files written with the old keys must have
+  their header keys renamed before 0.2.0 reads them.
+
+  | What | Before (0.1.x) | From 0.2.0 |
+  |---|---|---|
+  | Repository | `github.com/0x4272616E646F6E/ailuros` | `github.com/0x4272616E646F6E/decision-waf` |
+  | Go module | `github.com/0x4272616E646F6E/ailuros` | `github.com/0x4272616E646F6E/decision-waf` |
+  | Image | `ghcr.io/0x4272616e646f6e/ailuros` | `ghcr.io/0x4272616e646f6e/decision-waf` |
+  | Binaries | `ailuros`, `ailuros-eval` | `decision-waf`, `decision-waf-eval` |
+  | Environment variables | `AILUROS_*` | `DECISION_WAF_*` (same suffixes) |
+  | HTTP headers | `X-Ailuros-*` (`x-ailuros-request-id`, `x-ailuros-decision`, `x-ailuros-ja4`) | `X-Decision-Waf-*` (`x-decision-waf-request-id`, `x-decision-waf-decision`, `x-decision-waf-ja4`) |
+  | Metrics | `ailuros_*` (e.g. `ailuros_decisions_total`) | `decision_waf_*` (e.g. `decision_waf_decisions_total`) |
+  | Trace spans and attributes | `ailuros.decide`, `ailuros.classify`, `ailuros.*` | `decision_waf.decide`, `decision_waf.classify`, `decision_waf.*` |
+  | Eval file keys | `ailuros_eval_dataset`, `ailuros_eval_results`, `ailuros_version` | `decision_waf_eval_dataset`, `decision_waf_eval_results`, `decision_waf_version` |
+  | Paths | `/etc/ailuros/policy.yaml`, `/etc/ailuros-secret` | `/etc/decision-waf/policy.yaml`, `/etc/decision-waf-secret` |
+  | Kubernetes resources and labels | `ailuros`, `ailuros-*` (e.g. `ailuros-policy`, `app.kubernetes.io/name: ailuros`) | `decision-waf`, `decision-waf-*` (e.g. `decision-waf-policy`, `app.kubernetes.io/name: decision-waf`) |
 
 ### Added
 
@@ -19,7 +42,7 @@ minor version may change behavior or configuration; the entry says how.
   use the `jev` backend (`/v1/systemone`); through `openai` they reason and
   time out.
 
-- NGINX Gateway Fabric: the Ailuros NGINX module inspects every request on a
+- NGINX Gateway Fabric: the decision-waf NGINX module inspects every request on a
   route alongside tinyauth or another `auth_request` check, and how it applies
   forward-auth's answers.
 
@@ -92,4 +115,5 @@ The first release.
 - Release images for linux/amd64 and linux/arm64, signed with cosign, with
   SBOMs and SLSA build provenance.
 
+[0.2.0]: https://github.com/0x4272616E646F6E/decision-waf/releases/tag/v0.2.0
 [0.1.0]: https://github.com/0x4272616E646F6N/ailuros/releases/tag/v0.1.0
