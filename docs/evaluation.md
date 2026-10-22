@@ -1,7 +1,7 @@
 # Evaluating models
-`ailuros-eval` measures how well a decision model separates benign from
-malicious requests on a labelled dataset, and where `AILUROS_BLOCK_THRESHOLD`
-should sit for it. It sends each request through Ailuros's own decision
+`decision-waf-eval` measures how well a decision model separates benign from
+malicious requests on a labelled dataset, and where `DECISION_WAF_BLOCK_THRESHOLD`
+should sit for it. It sends each request through decision-waf's own decision
 pipeline (policy, redaction, rendering, backend client, attack-score rule)
 in-process; no proxy or server is involved.
 
@@ -15,14 +15,14 @@ OpenAI-compatible server add `MODEL_BACKEND=openai` and include `/v1` in
 is:
 
 ```bash
-ailuros-eval run --dataset eval/datasets/sample.jsonl --out bin/eval/run.jsonl
-ailuros-eval report bin/eval/run.jsonl            # --markdown, --json, --by-tag, --threshold 0.6
-ailuros-eval compare bin/eval/a.jsonl bin/eval/b.jsonl
+decision-waf-eval run --dataset eval/datasets/sample.jsonl --out bin/eval/run.jsonl
+decision-waf-eval report bin/eval/run.jsonl            # --markdown, --json, --by-tag, --threshold 0.6
+decision-waf-eval compare bin/eval/a.jsonl bin/eval/b.jsonl
 ```
 
-`run` reads the same `AILUROS_*` variables as `ailuros` (backend, base URL,
+`run` reads the same `DECISION_WAF_*` variables as `decision-waf` (backend, base URL,
 model, API key, timeout, policy file, threshold, body limit). Real models are
-usually slower than the 1 s default `AILUROS_CLASSIFIER_TIMEOUT`; `make eval`
+usually slower than the 1 s default `DECISION_WAF_CLASSIFIER_TIMEOUT`; `make eval`
 sets 10 s (`MODEL_TIMEOUT`). Timeouts and other classifier failures are
 reported as errors and left out of the detection numbers, so a run full of
 timeouts says so rather than looking clean. `--sample N` evaluates a
@@ -32,16 +32,16 @@ it is the same run: everything the results file's header records must
 match except the start time and the dataset's path. That is the
 results-file format version, the dataset's contents, backend, model server,
 model, classifier timeout, threshold, policy (path and contents), body
-limit, prompt version, sample size, seed, and the Ailuros version
-`ailuros-eval` was built from, so a binary built with `make` from another
+limit, prompt version, sample size, seed, and the decision-waf version
+`decision-waf-eval` was built from, so a binary built with `make` from another
 commit cannot resume the run (`go build` and `go run` stamp `dev`).
 
 **Reading the report.** Detection counts a request as flagged when its attack
-score (1 − P(benign)) is at least the threshold, as Ailuros does; per-route
+score (1 − P(benign)) is at least the threshold, as decision-waf does; per-route
 policy thresholds are not applied. The sweep shows precision, recall,
 false-positive rate, and F1 from 0.05 to 0.95 and recommends two points:
 best F1, and the highest recall whose false-positive rate is at most
-`--max-fpr` (default 0.01). Choose `AILUROS_BLOCK_THRESHOLD` from those with
+`--max-fpr` (default 0.01). Choose `DECISION_WAF_BLOCK_THRESHOLD` from those with
 your own tolerance for blocking real users in mind. The report warns when
 fewer than 100 benign or 100 attack requests were scored: below that, the
 recommendations are noise.
@@ -65,14 +65,14 @@ choose a threshold with. `eval/results/` holds example reports.
 labelled request per line.
 
 ```json
-{"ailuros_eval_dataset": 1, "name": "shop-2026-10", "description": "Sampled production traffic, hand-labelled"}
+{"decision_waf_eval_dataset": 1, "name": "shop-2026-10", "description": "Sampled production traffic, hand-labelled"}
 {"id": "r-1", "label": "benign", "method": "GET", "scheme": "https", "host": "shop.example.com", "path": "/search", "query": "q=red+shoes", "headers": {"user-agent": ["Mozilla/5.0"]}, "tags": ["query"]}
 {"id": "r-2", "label": "sqli", "method": "POST", "path": "/login", "body_b64": "dXNlcj1hZG1pbictLSZwYXNzPXg=", "tags": ["body"]}
 ```
 
 `label` is `benign` or a category from your policy; `method` and `path` are
 required, and the query string goes in `query`, not in `path`; `headers` maps names to lists of values; bodies are base64 in
-`body_b64` and cut to `AILUROS_BODY_MAX_BYTES` as in `standard` mode; gRPC
+`body_b64` and cut to `DECISION_WAF_BODY_MAX_BYTES` as in `standard` mode; gRPC
 requests set `grpc` to `package.Service/Method` (the path must match, and a
 `content-type` header, if any, must be gRPC; `application/grpc` is added when
 there is none) and
@@ -85,7 +85,7 @@ drop a field. Headers that the default policy redacts (`authorization`,
 
 The best data is your own traffic: export a sample of requests from your
 proxy logs, label it, and write it in this format. Public labelled HTTP
-datasets work too, under their own licences; Ailuros does not redistribute
+datasets work too, under their own licences; decision-waf does not redistribute
 them. For example, the CSIC 2010 HTTP dataset ships normal and anomalous
 requests as raw HTTP text: parse each request's method, path, query, headers,
 and body, label the normal ones `benign` and the anomalous ones with the
@@ -106,7 +106,7 @@ large enough to compare models, but it is not recorded attack traffic, so
 check a threshold against your own traffic before relying on it.
 
 Two decision models served by llama.cpp server through the `jev` backend,
-`AILUROS_INSPECTION_MODE=lite` (reports in `eval/results/*-selfhosted.md`):
+`DECISION_WAF_INSPECTION_MODE=lite` (reports in `eval/results/*-selfhosted.md`):
 
 | Threshold | Model | Precision | Recall | False-positive rate | F1 |
 |---|---|---|---|---|---|

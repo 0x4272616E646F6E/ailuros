@@ -1,6 +1,6 @@
-> Illustrative example of ailuros-eval output: `mradermacher/h2o-lightning-4b` (a GGUF build of H2O.ai's h2o-lightning-4b, served by LM Studio, `openai` backend, `AILUROS_CLASSIFIER_TIMEOUT=60s`) on the 24-request shipped sample. Through a chat API it reasons before answering, so each call includes its thinking time; served by llama.cpp server through the `jev` backend it does not (see `h2o-lightning-4b-selfhosted.md`). The sample is far too small to choose a threshold with; this is not a recommendation.
+> Illustrative example of decision-waf-eval output: `mradermacher/h2o-lightning-4b` (a GGUF build of H2O.ai's h2o-lightning-4b, served by LM Studio, `openai` backend, `DECISION_WAF_CLASSIFIER_TIMEOUT=60s`) on the 24-request shipped sample. Through a chat API it reasons before answering, so each call includes its thinking time; served by llama.cpp server through the `jev` backend it does not (see `h2o-lightning-4b-selfhosted.md`). The sample is far too small to choose a threshold with; this is not a recommendation.
 
-# ailuros-eval report
+# decision-waf-eval report
 
 | | |
 |---|---|
@@ -8,7 +8,7 @@
 | Backend | openai, model `mradermacher/h2o-lightning-4b` |
 | Policy | default |
 | Threshold | 0.80 (run: 0.80) |
-| Ailuros | 5571447 |
+| decision-waf | 5571447 |
 | Started | 2026-10-14T02:44:31Z |
 | Requests | 24 (23 scored, 1 errors) |
 

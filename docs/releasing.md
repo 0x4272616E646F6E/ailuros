@@ -19,5 +19,5 @@ These are repository settings, not files, so CI cannot set them:
 2. **Secret scanning with push protection** (Settings → Code security).
 3. **A ruleset for `main`**: require pull requests with one approval and review from Code Owners (`.github/CODEOWNERS`; with a single maintainer, allow the repository admin to bypass), and require these status checks, which are named after the jobs: `lint`, `test`, `build`, `validate`, `integration`, `codeql (go)`, `codeql (actions)`, `govulncheck`, `gitleaks`, `zizmor`. (`dependency-review` runs only on pull requests, so do not require it on pushes.)
 4. **A tag ruleset for `v*`**: only maintainers may create release tags; the release workflow also refuses tags that are not on `main`.
-5. **After the first release, make the GHCR package public** (Packages → ailuros → Package settings): new organisation packages start private, and the [verification commands](verifying-images.md) fail for others until it is public.
+5. **After the first release, make the GHCR package public** (Packages → decision-waf → Package settings): new organisation packages start private, and the [verification commands](verifying-images.md) fail for others until it is public.
 6. **After a few runs**, switch Harden-Runner in `release.yml` from `egress-policy: audit` to `block` with the endpoints the audit logs show.

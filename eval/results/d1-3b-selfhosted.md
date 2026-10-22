@@ -1,6 +1,6 @@
-> `LiquidAI/d1-3B-GGUF` (Q8_0), a decision model, served by llama.cpp server build 11822 on an Apple M4 (Metal) through the `jev` backend (`/v1/systemone`), `AILUROS_INSPECTION_MODE=lite`, one request at a time. Latency is the M4's; on an RTX 4000 SFF Ada the same model answers in about 0.1 s.
+> `LiquidAI/d1-3B-GGUF` (Q8_0), a decision model, served by llama.cpp server build 11822 on an Apple M4 (Metal) through the `jev` backend (`/v1/systemone`), `DECISION_WAF_INSPECTION_MODE=lite`, one request at a time. Latency is the M4's; on an RTX 4000 SFF Ada the same model answers in about 0.1 s.
 
-# ailuros-eval report
+# decision-waf-eval report
 
 | | |
 |---|---|
@@ -8,7 +8,7 @@
 | Backend | jev, model `d1-3B` at http://127.0.0.1:18080, timeout 30s |
 | Policy | default |
 | Threshold | 0.8 (run: 0.8) |
-| Ailuros | v0.1.0-1-g847564d |
+| decision-waf | v0.1.0-1-g847564d |
 | Started | 2026-10-22T18:33:28Z |
 | Requests | 271 (271 scored, 0 errors) |
 

@@ -1,6 +1,6 @@
-> Illustrative example of ailuros-eval output: hosted Jev `jev-latest` (`https://api.typesafe.ai`, `jev` backend) on the 24-request shipped sample. The sample is far too small to choose a threshold with; this is not a recommendation.
+> Illustrative example of decision-waf-eval output: hosted Jev `jev-latest` (`https://api.typesafe.ai`, `jev` backend) on the 24-request shipped sample. The sample is far too small to choose a threshold with; this is not a recommendation.
 
-# ailuros-eval report
+# decision-waf-eval report
 
 | | |
 |---|---|
@@ -8,7 +8,7 @@
 | Backend | jev, model `jev-latest` |
 | Policy | default |
 | Threshold | 0.80 (run: 0.80) |
-| Ailuros | d16b286 |
+| decision-waf | d16b286 |
 | Started | 2026-10-13T23:59:57Z |
 | Requests | 24 (24 scored, 0 errors) |
 

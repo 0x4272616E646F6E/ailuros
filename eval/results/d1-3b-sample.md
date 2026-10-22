@@ -1,6 +1,6 @@
-> Illustrative example of ailuros-eval output: d1-3b (LM Studio, `jev` backend) on the 24-request shipped sample. The sample is far too small to choose a threshold with; this is not a recommendation.
+> Illustrative example of decision-waf-eval output: d1-3b (LM Studio, `jev` backend) on the 24-request shipped sample. The sample is far too small to choose a threshold with; this is not a recommendation.
 
-# ailuros-eval report
+# decision-waf-eval report
 
 | | |
 |---|---|
@@ -8,7 +8,7 @@
 | Backend | jev, model `d1-3b` |
 | Policy | default |
 | Threshold | 0.80 (run: 0.80) |
-| Ailuros | 35b85b5 |
+| decision-waf | 35b85b5 |
 | Started | 2026-10-13T22:11:03Z |
 | Requests | 24 (24 scored, 0 errors) |
 

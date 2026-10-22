@@ -1,4 +1,4 @@
-# Contributing to Ailuros
+# Contributing to decision-waf
 
 Bug reports, fixes, tests and documentation are welcome. For larger changes,
 open an issue first. Report security issues privately as described in
@@ -13,14 +13,14 @@ required for integration tests; `make validate-k8s` also needs kubectl, and
 
 | Command | What it does |
 |---|---|
-| `make build` | builds `bin/ailuros` and `bin/ailuros-eval` |
+| `make build` | builds `bin/decision-waf` and `bin/decision-waf-eval` |
 | `make test` | unit and offline config tests with the race detector, no network |
 | `make lint vet` | golangci-lint (with gosec) and `go vet`, once per build tag |
 | `make validate-envoy` | checks the shipped Envoy configs with `envoy --mode validate`, also with the JA4 block uncommented (Docker) |
 | `make validate-k8s` | renders and checks every Kubernetes overlay offline |
-| `make test-integration` | every proxy in front of Ailuros, with docker compose |
+| `make test-integration` | every proxy in front of decision-waf, with docker compose |
 | `make test-k8s` | the same cases in a kind cluster with Envoy Gateway |
-| `make eval` | runs `ailuros-eval` against a model ([Evaluating models](docs/evaluation.md)) |
+| `make eval` | runs `decision-waf-eval` against a model ([Evaluating models](docs/evaluation.md)) |
 
 Run `make lint vet test` before opening a pull request. Run
 `make test-integration` when changing a frontend or shipped proxy config.
@@ -42,7 +42,7 @@ CI must pass before a pull request is merged.
 
 ## Licence of contributions
 
-Ailuros is licensed under the [Apache License, Version 2.0](LICENSE). Under
+decision-waf is licensed under the [Apache License, Version 2.0](LICENSE). Under
 section 5 of that licence, anything you submit for inclusion is licensed
 under the same terms, with no separate agreement or sign-off needed. Only
 submit work you have the right to license this way.
@@ -58,7 +58,7 @@ through each supported proxy with Docker Compose:
 | `nginx` | `deploy/nginx/nginx.conf` |
 | `traefik` | `deploy/traefik/dynamic.yml` + `test/integration/compose/traefik-static.yml` |
 
-The tests build Ailuros, a stub decision model and an echo upstream, then use
+The tests build decision-waf, a stub decision model and an echo upstream, then use
 the stub's request markers to exercise allow, block and failure paths. No model
 or API key is needed.
 
@@ -67,11 +67,11 @@ make test-integration
 # One stack, left running afterwards for inspection:
 go test -tags integration -count=1 -run '^TestNginx$' ./test/integration -keep
 # Clean up kept stacks, including the hashed per-override projects
-# (ailuros-it-<stack>-<hash>); `docker compose ls --all --filter name=ailuros-it`
+# (decision-waf-it-<stack>-<hash>); `docker compose ls --all --filter name=decision-waf-it`
 # lists them. Containers a test started on a stack's network carry the
-# ailuros-it.project label and go first:
-for c in $(docker ps -aq --filter label=ailuros-it.project); do docker rm -f "$c"; done
-for p in $(docker compose ls --all -q --filter name=ailuros-it); do docker compose -p "$p" down -v; done
+# decision-waf-it.project label and go first:
+for c in $(docker ps -aq --filter label=decision-waf-it.project); do docker rm -f "$c"; done
+for p in $(docker compose ls --all -q --filter name=decision-waf-it); do docker compose -p "$p" down -v; done
 ```
 
 `make test-integration-model MODEL_URL=… MODEL=…` runs the sample dataset

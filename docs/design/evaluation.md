@@ -1,6 +1,6 @@
-# Evaluating models (ailuros-eval)
+# Evaluating models (decision-waf-eval)
 
-`ailuros-eval` measures how well a decision model separates benign from malicious requests on a labelled dataset the operator supplies, and where `AILUROS_BLOCK_THRESHOLD` should sit for it. It runs each request in-process through the same decision engine the server uses, records one result per request in a results file, and computes every metric from that file afterwards. Ailuros ships the tool and a 24-request sample. It does not ship an attack corpus. Usage is in [Evaluating models](../evaluation.md); this note explains the choices behind it.
+`decision-waf-eval` measures how well a decision model separates benign from malicious requests on a labelled dataset the operator supplies, and where `DECISION_WAF_BLOCK_THRESHOLD` should sit for it. It runs each request in-process through the same decision engine the server uses, records one result per request in a results file, and computes every metric from that file afterwards. decision-waf ships the tool and a 24-request sample. It does not ship an attack corpus. Usage is in [Evaluating models](../evaluation.md); this note explains the choices behind it.
 
 ## Context
 
@@ -12,15 +12,15 @@ The integration tests ([testing.md](testing.md)) use a stub model and check plum
 
 ### Run in-process through the production engine, not through a proxy
 
-`ailuros-eval run` builds a `decision.Engine` with `backend.Engine` (`internal/backend`), the same function the server uses. That package holds only the backend and engine wiring, so `ailuros-eval` does not pull in the server's listeners, frontends or gRPC, and a test in `cmd/ailuros-eval` keeps it that way. Backend client, guard (timeout and breaker), policy, redaction, prompt rendering, the attack-score rule, threshold and failure mode are therefore the production ones, and a test asserts both paths decide identically. Configuration comes from the usual `AILUROS_*` variables through `internal/config`; only classifier, policy, threshold, and body-limit settings matter here.
+`decision-waf-eval run` builds a `decision.Engine` with `backend.Engine` (`internal/backend`), the same function the server uses. That package holds only the backend and engine wiring, so `decision-waf-eval` does not pull in the server's listeners, frontends or gRPC, and a test in `cmd/decision-waf-eval` keeps it that way. Backend client, guard (timeout and breaker), policy, redaction, prompt rendering, the attack-score rule, threshold and failure mode are therefore the production ones, and a test asserts both paths decide identically. Configuration comes from the usual `DECISION_WAF_*` variables through `internal/config`; only classifier, policy, threshold, and body-limit settings matter here.
 
 Why: a proxy adds Docker, ports and frontend quirks that have nothing to do with model quality, and it makes a 1,000-request run slow and flaky. A separate scoring path would drift from production. Rejected: driving Envoy or NGINX (slow, measures the wrong thing); a second, simplified evaluator pipeline (would not catch policy or redaction changes).
 
-The score is read from the `decision.Decision`: `Verdict.AttackScore()` (1 minus P(benign)) when the request was classified, otherwise the decision's reason is recorded as the error. The engine needed no new accessor. Requests are built as `standard` mode builds them: bodies are cut to `AILUROS_BODY_MAX_BYTES` with `BodyTruncated` set, and gRPC entries set service and method.
+The score is read from the `decision.Decision`: `Verdict.AttackScore()` (1 minus P(benign)) when the request was classified, otherwise the decision's reason is recorded as the error. The engine needed no new accessor. Requests are built as `standard` mode builds them: bodies are cut to `DECISION_WAF_BODY_MAX_BYTES` with `BodyTruncated` set, and gRPC entries set service and method.
 
 ### A strict, small JSONL dataset format
 
-`internal/eval/dataset`: line 1 is a header (`ailuros_eval_dataset: 1`, optional `name` and `description`); each other line is one request with `id`, `label`, `method`, `path` and optional `scheme`, `host`, `query`, `headers` (name to list of values, names lower-cased), `body_b64`, `grpc`, `tags` and `note`. Labels must be `benign` or a category of the active policy, so a dataset is validated against the policy it will be run with.
+`internal/eval/dataset`: line 1 is a header (`decision_waf_eval_dataset: 1`, optional `name` and `description`); each other line is one request with `id`, `label`, `method`, `path` and optional `scheme`, `host`, `query`, `headers` (name to list of values, names lower-cased), `body_b64`, `grpc`, `tags` and `note`. Labels must be `benign` or a category of the active policy, so a dataset is validated against the policy it will be run with.
 
 Loading fails with every problem listed, each with its line number: unknown fields (catches typos such as `quary`), field names in another case and repeated keys (`encoding/json` would read `"LABEL"` as the label, and the last of two `label` keys, silently; `internal/eval/strictjson`), missing required fields, a path without a leading `/`, duplicate IDs, labels outside the policy, invalid base64, and a `grpc` value that is not `package.Service/Method` or does not match `path`. An unknown header version, an empty file and a file with no requests are also refused. Lines may be up to 64 MiB (bodies) and may end in CRLF. Strictness matters because a silently ignored field produces a plausible but wrong report. JSON Lines was chosen over one JSON array so datasets can be appended to, diffed and streamed.
 
@@ -28,19 +28,19 @@ Loading fails with every problem listed, each with its line number: unknown fiel
 
 `eval/datasets/sample.jsonl` holds 24 requests: 10 benign (five tagged `lookalike`, benign requests that resemble attacks) and 14 classic, illustrative attacks across `sqli`, `xss`, `path_traversal`, `rce` and `scanner`. It exists so the tool runs out of the box and the tests have data. It is far too small to tune a threshold on, and the usage guide and every report say so.
 
-Ailuros does not generate or ship a larger attack corpus, and does not redistribute third-party datasets. Operators evaluate on their own labelled traffic, or on public labelled HTTP datasets they obtain under those datasets' own licences; the usage guide has a recipe for converting one. An earlier design had a `generate` command that would author a 1,200-request corpus; it was dropped. The repo should not be a store of attack payloads, a synthetic corpus would flatter or punish a model in ways real traffic does not, and the people who need an answer have better data than we could invent.
+decision-waf does not generate or ship a larger attack corpus, and does not redistribute third-party datasets. Operators evaluate on their own labelled traffic, or on public labelled HTTP datasets they obtain under those datasets' own licences; the usage guide has a recipe for converting one. An earlier design had a `generate` command that would author a 1,200-request corpus; it was dropped. The repo should not be a store of attack payloads, a synthetic corpus would flatter or punish a model in ways real traffic does not, and the people who need an answer have better data than we could invent.
 
 ### Results are a self-describing file; everything else is computed from it
 
-`internal/eval/results`: line 1 is a header, then one line per request: `id`, `label`, `tags`, `attack_score`, `category`, `outcome`, `error`, `latency_ms`. The header records the dataset (path, name, SHA-256, entry count), backend, base URL (without any user and password), model, classifier timeout, run threshold, policy (path or `default`, plus the SHA-256 of the policy file), body limit, sample size and seed, Ailuros version (`internal/version.Version`, set by ldflags, default `dev`) and start time.
+`internal/eval/results`: line 1 is a header, then one line per request: `id`, `label`, `tags`, `attack_score`, `category`, `outcome`, `error`, `latency_ms`. The header records the dataset (path, name, SHA-256, entry count), backend, base URL (without any user and password), model, classifier timeout, run threshold, policy (path or `default`, plus the SHA-256 of the policy file), body limit, sample size and seed, decision-waf version (`internal/version.Version`, set by ldflags, default `dev`) and start time.
 
 Metrics can then be recomputed at any threshold without calling a model, and `report` and `compare` never need the dataset or a backend. A classifier failure has no `attack_score` and records its reason in `error`; it is never counted as benign or as an attack.
 
-`Header.SameRun` decides whether a file may be resumed: everything must match except the start time and the dataset's path (the file may have moved). That includes the dataset hash, backend, base URL, model, classifier timeout, threshold, policy hash and version, body limit, sample and seed, and Ailuros version. The base URL and timeout were added after a review found that a resume against another server with the same model name, or with a longer timeout (and so a different error rate), was accepted. Changing any of them mid-file would mix two experiments.
+`Header.SameRun` decides whether a file may be resumed: everything must match except the start time and the dataset's path (the file may have moved). That includes the dataset hash, backend, base URL, model, classifier timeout, threshold, policy hash and version, body limit, sample and seed, and decision-waf version. The base URL and timeout were added after a review found that a resume against another server with the same model name, or with a longer timeout (and so a different error rate), was accepted. Changing any of them mid-file would mix two experiments.
 
 ### Resume by truncating a partial last line
 
-`--resume` skips IDs already in the file. An interrupted run can leave a partial last line, because each result is written in one `Write` call and only the final line can be cut. The reader ignores a final line with no newline, and `openResults` (`cmd/ailuros-eval/run.go`) truncates the file to the length of its complete lines before appending, so the partial line is never glued to the next one. An existing file is refused without `--resume`, and with it unless the header is the same run.
+`--resume` skips IDs already in the file. An interrupted run can leave a partial last line, because each result is written in one `Write` call and only the final line can be cut. The reader ignores a final line with no newline, and `openResults` (`cmd/decision-waf-eval/run.go`) truncates the file to the length of its complete lines before appending, so the partial line is never glued to the next one. An existing file is refused without `--resume`, and with it unless the header is the same run.
 
 ### Sampling is stratified and seeded
 
@@ -66,7 +66,7 @@ A rate with a zero denominator (no attacks, nothing flagged) is 0 in the JSON ou
 
 ## How it works
 
-- `cmd/ailuros-eval`: the CLI (`main.go` dispatch and exit codes, `run.go`, `report.go`).
+- `cmd/decision-waf-eval`: the CLI (`main.go` dispatch and exit codes, `run.go`, `report.go`).
 - `internal/eval/dataset`: read, validate and convert entries to `inspect.Request`.
 - `internal/eval/run`: `Run`, `Sample`, `NewBreaker`.
 - `internal/eval/results`: header, result lines, reader and writer.
@@ -87,7 +87,7 @@ Reasoning models served by LM Studio work with the `openai` backend: LM Studio k
 
 ## Limitations and trade-offs
 
-- The sample cannot support a threshold choice. Recommending a default threshold needs a larger operator-supplied or public dataset, which Ailuros does not provide.
+- The sample cannot support a threshold choice. Recommending a default threshold needs a larger operator-supplied or public dataset, which decision-waf does not provide.
 - Report quality is bounded by label quality; the tool does not check labels.
 - Per-route policy thresholds are not applied; every result is judged at one global threshold.
 - No confidence intervals or significance tests; `compare` shows point estimates only.

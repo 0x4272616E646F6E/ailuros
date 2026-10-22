@@ -1,6 +1,6 @@
 # Request signals and limits
 
-Ailuros measures a few structural signals of each request before it asks the
+decision-waf measures a few structural signals of each request before it asks the
 model: the shape of a GraphQL document, header patterns that go with request
 smuggling, WebSocket handshake properties, the HTTP protocol and, behind
 Envoy, the client's JA4 TLS fingerprint. The signals are added to the prompt
@@ -9,7 +9,7 @@ any of them into a block that skips the model. Every limit is off by
 default: with no `limits:`, decisions are the same as before, except that the
 model sees the `signals:` block.
 
-## What Ailuros extracts
+## What decision-waf extracts
 
 Each kind is absent from the prompt and the log when it does not apply. The
 signals are computed on the request as the engine received it, before
@@ -74,7 +74,7 @@ block strings and comments are not counted. Limit names: `graphql_batch`,
 `graphql_operations`, `graphql_introspection`, `graphql_depth`,
 `graphql_aliases`, `graphql_fields`.
 
-**Smuggling flags**, from the headers as Ailuros receives them:
+**Smuggling flags**, from the headers as decision-waf receives them:
 
 | Flag | Condition |
 |---|---|
@@ -177,19 +177,19 @@ places under that route; an ambiguous path gets the stricter limits.
 (gRPC status 7, `PERMISSION_DENIED`), not the malformed-request 400. The
 decision log has `reason=limit` (the decision's note, logged as the
 reason as for other bypasses) and `limit=<name>` (for example
-`graphql_depth`); the span has `ailuros.limit`; the decisions metric counts it as
+`graphql_depth`); the span has `decision_waf.limit`; the decisions metric counts it as
 `outcome=block` with category `none`. The model is not called. Limits are checked
 in a fixed order, and the first hit is reported: smuggling, WebSocket, JA4,
 then GraphQL batch, operations, introspection, depth, aliases, fields.
 
 **Where limits apply.** Limits apply to every decision that would otherwise
 let the request through, so a limit hit turns an allowing bypass
-(`AILUROS_DEEP_OVERSIZE=allow`, the message limit, an uninspectable body
+(`DECISION_WAF_DEEP_OVERSIZE=allow`, the message limit, an uninspectable body
 allowed) or a fail-open classifier failure into a limit block. A bypass that
 already blocks keeps its own reason. On a truncated body, limits apply to
 what arrived; depth, aliases and fields only grow with more input, so a
 prefix over a limit is safe to block. One gap: in `deep` mode with
-`AILUROS_DEEP_OVERSIZE=allow`, the oversize bypass carries no body, so
+`DECISION_WAF_DEEP_OVERSIZE=allow`, the oversize bypass carries no body, so
 body-derived GraphQL limits are not checked on that path (limits derived
 from headers and the URL are, at the headers decision).
 
@@ -200,7 +200,7 @@ so measure your traffic first, then set limits above what normal traffic
 does:
 
 ```bash
-jq -r 'select(.signals | contains("graphql")) | .signals' < ailuros.log | sort | uniq -c | sort -rn | head
+jq -r 'select(.signals | contains("graphql")) | .signals' < decision-waf.log | sort | uniq -c | sort -rn | head
 ```
 
 Scope GraphQL limits to your GraphQL routes with a route `limits:` block
@@ -222,12 +222,12 @@ hits.
   written. Counts can exceed what a server executes (a fragment on a type the object is not, or `@skip`ped
   fields), which errs toward blocking.
 - GraphQL limits are only as strong as the body cap. Only the body prefix
-  Ailuros receives is read, and a JSON body can put large `variables` or
+  decision-waf receives is read, and a JSON body can put large `variables` or
   `extensions` (or very deep nesting) before `query` to push the query past
   that prefix, where it is not measured. If you rely on GraphQL limits, keep
-  legitimate `query` fields within `AILUROS_BODY_MAX_BYTES` (`standard`) or
-  `AILUROS_DEEP_MAX_BYTES` (`deep`), and consider `deep` with
-  `AILUROS_DEEP_OVERSIZE=block` so oversize bodies are refused rather than
+  legitimate `query` fields within `DECISION_WAF_BODY_MAX_BYTES` (`standard`) or
+  `DECISION_WAF_DEEP_MAX_BYTES` (`deep`), and consider `deep` with
+  `DECISION_WAF_DEEP_OVERSIZE=block` so oversize bodies are refused rather than
   judged on their prefix.
 - The GraphQL `name=` in the prompt and the log comes from the unredacted
   request: a `json_fields` redaction of `operationName` does not hide it
@@ -237,14 +237,14 @@ hits.
   count.
 - Smuggling flags see the request after the proxy parsed it, so they are best
   effort and no substitute for a proxy that rejects ambiguous framing. Envoy
-  rejects most of these requests before Ailuros sees them.
+  rejects most of these requests before decision-waf sees them.
 - WebSocket handshakes are detected only behind Envoy. Messages after the
   upgrade, and TLS passthrough, are never inspected.
 - GraphQL bodies are visible only in Envoy's `standard` and `deep` modes.
 - JA4 is Envoy only and opt-in. It fingerprints the client's TLS library, not
   the user; shared libraries and middleboxes make it a weak signal alone.
-  Ailuros removes the header only from its own copy of the request: Envoy
-  still forwards `x-ailuros-ja4` upstream unless you remove it (for example
+  decision-waf removes the header only from its own copy of the request: Envoy
+  still forwards `x-decision-waf-ja4` upstream unless you remove it (for example
   with `request_headers_to_remove` on the route, or a `RequestHeaderModifier`
   on the HTTPRoute with Envoy Gateway).
 - The `signals:` block changes the prompt, so model scores shift and

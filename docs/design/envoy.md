@@ -1,34 +1,34 @@
 # Envoy integration (ext_proc and ext_authz)
 
-Ailuros serves two Envoy APIs: `ext_proc`, which supports all three inspection modes (`lite`, `standard`, `deep`), and `ext_authz`, which supports `lite` only. The Envoy filter config must match the mode the Ailuros process runs in. Ailuros adapts when it does not, and counts the mismatch rather than failing. `deep` holds request bodies inside Ailuros, classifies HTTP bodies whole and gRPC bodies message by message, and releases only what it has decided. This note explains why that is built the way it is. Setup steps are in [Envoy](../envoy.md). The decision engine is in [architecture.md](architecture.md), and the Kubernetes variant is in [kubernetes.md](kubernetes.md).
+decision-waf serves two Envoy APIs: `ext_proc`, which supports all three inspection modes (`lite`, `standard`, `deep`), and `ext_authz`, which supports `lite` only. The Envoy filter config must match the mode the decision-waf process runs in. decision-waf adapts when it does not, and counts the mismatch rather than failing. `deep` holds request bodies inside decision-waf, classifies HTTP bodies whole and gRPC bodies message by message, and releases only what it has decided. This note explains why that is built the way it is. Setup steps are in [Envoy](../envoy.md). The decision engine is in [architecture.md](architecture.md), and the Kubernetes variant is in [kubernetes.md](kubernetes.md).
 
 ## Context
 
 - Envoy opens one bidirectional gRPC stream per HTTP request for ext_proc. The filter's `processing_mode` decides what Envoy sends: headers only, one buffered body, or a streamed body.
-- Ailuros must answer before Envoy gives up, or the filter's `failure_mode_allow` decides instead of the route's failure mode.
+- decision-waf must answer before Envoy gives up, or the filter's `failure_mode_allow` decides instead of the route's failure mode.
 - The classifier is a small model that reads a few hundred tokens a second. Anything sent to it has to be small.
-- A blocked request must not reach the upstream. In `deep` mode, request content cannot reach the upstream before Ailuros has looked at it.
+- A blocked request must not reach the upstream. In `deep` mode, request content cannot reach the upstream before decision-waf has looked at it.
 - Request side only. The shipped configs skip response headers, body and trailers. Response-side inspection is out of scope.
 
 ## Decisions
 
-### One Ailuros process serves one mode, matched to the Envoy config
+### One decision-waf process serves one mode, matched to the Envoy config
 
-`AILUROS_INSPECTION_MODE` maps to an Envoy `request_body_mode`: `lite` to `NONE`, `standard` to `BUFFERED_PARTIAL`, `deep` to `FULL_DUPLEX_STREAMED` with `request_trailer_mode: SEND`. `deploy/envoy/{lite,standard,deep,ext_authz}.yaml` ship one config per mode.
+`DECISION_WAF_INSPECTION_MODE` maps to an Envoy `request_body_mode`: `lite` to `NONE`, `standard` to `BUFFERED_PARTIAL`, `deep` to `FULL_DUPLEX_STREAMED` with `request_trailer_mode: SEND`. `deploy/envoy/{lite,standard,deep,ext_authz}.yaml` ship one config per mode.
 
-On a mismatch Ailuros classifies on headers alone, warns once per process, and increments `ailuros_mode_downgrades_total{frontend="extproc"}`. It never refuses to serve. Detection uses `ProcessingRequest.protocol_config.request_body_mode` when Envoy sends it. The fallback is a headers message that ends the stream while `content-length` promises a body. A stream that ends with no decision at all is also counted, but only when Envoy sent no `protocol_config` (`checkUndecided` in `internal/frontend/extproc/extproc.go`): with it, a mismatch is caught at the headers, and an undecided end is a client that went away, which Envoy closes the same way. The fallback matters because `end_of_stream` on the headers message reflects the real request, not Envoy's body mode, so the heuristic alone rarely fires.
+On a mismatch decision-waf classifies on headers alone, warns once per process, and increments `decision_waf_mode_downgrades_total{frontend="extproc"}`. It never refuses to serve. Detection uses `ProcessingRequest.protocol_config.request_body_mode` when Envoy sends it. The fallback is a headers message that ends the stream while `content-length` promises a body. A stream that ends with no decision at all is also counted, but only when Envoy sent no `protocol_config` (`checkUndecided` in `internal/frontend/extproc/extproc.go`): with it, a mismatch is caught at the headers, and an undecided end is a client that went away, which Envoy closes the same way. The fallback matters because `end_of_stream` on the headers message reflects the real request, not Envoy's body mode, so the heuristic alone rarely fires.
 
-Rejected: a per-request `mode_override` chosen by Ailuros. Letting the service pick what Envoy sends makes the deployed behavior depend on traffic. A fixed mode per process is easy to reason about, and the mismatch metric shows misconfiguration. ext_authz is always `lite`; a different configured mode is warned about at startup and counted on every request.
+Rejected: a per-request `mode_override` chosen by decision-waf. Letting the service pick what Envoy sends makes the deployed behavior depend on traffic. A fixed mode per process is easy to reason about, and the mismatch metric shows misconfiguration. ext_authz is always `lite`; a different configured mode is warned about at startup and counted on every request.
 
-### `deep` holds bodies in Ailuros (FULL_DUPLEX_STREAMED)
+### `deep` holds bodies in decision-waf (FULL_DUPLEX_STREAMED)
 
-In `FULL_DUPLEX_STREAMED`, Envoy forwards only the body chunks Ailuros streams back. Ailuros holds incoming chunks and releases them (in chunks of at most 64 KiB) after a decision. This gives true enforcement: a blocked body never reaches the upstream. Envoy 1.33 introduced the mode; Ailuros needs 1.34 or later for every mode, since mismatch detection relies on the `protocol_config` that 1.34 added.
+In `FULL_DUPLEX_STREAMED`, Envoy forwards only the body chunks decision-waf streams back. decision-waf holds incoming chunks and releases them (in chunks of at most 64 KiB) after a decision. This gives true enforcement: a blocked body never reaches the upstream. Envoy 1.33 introduced the mode; decision-waf needs 1.34 or later for every mode, since mismatch detection relies on the `protocol_config` that 1.34 added.
 
-Rejected: Envoy's newer `GRPC` body send mode, which would do gRPC framing in Envoy. Ailuros reassembles the framing itself (`internal/frontend/extproc/grpcframe.go`), so it works on more Envoy releases. It could be adopted later behind the same `deep` setting.
+Rejected: Envoy's newer `GRPC` body send mode, which would do gRPC framing in Envoy. decision-waf reassembles the framing itself (`internal/frontend/extproc/grpcframe.go`), so it works on more Envoy releases. It could be adopted later behind the same `deep` setting.
 
 ### Headers first
 
-In `deep`, Ailuros classifies the request headers and answers the headers message before any body arrives. Envoy sends no body chunk until it has the headers response, so the answer cannot wait for the body. Once CONTINUE is sent, Envoy forwards the headers upstream, so a header-level attack has to be caught first. A block is an immediate response. The cost is one extra classifier call for any request with a body. The headers decision is logged under a stream-level ID, which is also the `x-ailuros-request-id` header set on the upstream request.
+In `deep`, decision-waf classifies the request headers and answers the headers message before any body arrives. Envoy sends no body chunk until it has the headers response, so the answer cannot wait for the body. Once CONTINUE is sent, Envoy forwards the headers upstream, so a header-level attack has to be caught first. A block is an immediate response. The cost is one extra classifier call for any request with a body. The headers decision is logged under a stream-level ID, which is also the `x-decision-waf-request-id` header set on the upstream request.
 
 ### gRPC messages are decided one at a time
 
@@ -38,29 +38,29 @@ The compressed flag is trusted only when the call has a `grpc-encoding` other th
 
 ### Message cap: blocks by default
 
-A stream takes at most `AILUROS_DEEP_MAX_MESSAGES` decisions (default 100, range 1 to 10000, headers included). The cap bounds classifier calls, and so model cost, per stream. Past it, nothing more of the stream would be inspected, so the stream is blocked (413, gRPC 8, `reason=message_limit`) under both `classify_prefix` and `block`. Only `AILUROS_DEEP_OVERSIZE=allow` lets the rest through. The first version followed the oversize policy, which under the default meant 99 benign messages followed by anything unclassified. Long-lived streaming RPCs (chat, telemetry) need a higher cap.
+A stream takes at most `DECISION_WAF_DEEP_MAX_MESSAGES` decisions (default 100, range 1 to 10000, headers included). The cap bounds classifier calls, and so model cost, per stream. Past it, nothing more of the stream would be inspected, so the stream is blocked (413, gRPC 8, `reason=message_limit`) under both `classify_prefix` and `block`. Only `DECISION_WAF_DEEP_OVERSIZE=allow` lets the rest through. The first version followed the oversize policy, which under the default meant 99 benign messages followed by anything unclassified. Long-lived streaming RPCs (chat, telemetry) need a higher cap.
 
 ### Compressed messages are decompressed, with a bound
 
-`gzip` and `deflate` (zlib; that is gRPC's "deflate") payloads are inflated and the plaintext is classified; the original compressed bytes are forwarded on allow. Output stops at `AILUROS_DEEP_MAX_BYTES` (`internal/frontend/extproc/decompress.go`), so a small message cannot expand into a bomb. A message that inflates past the cap is oversize and handled by the oversize policy. Other encodings (`snappy`, `zstd`) and corrupt data are uninspectable. They are blocked (413, gRPC 8, `reason=uninspectable`) unless the policy is `allow`, even under `classify_prefix`, because there is no readable prefix to classify. The first design classified only the headers for compressed messages, so declaring `grpc-encoding` was a way to skip payload inspection.
+`gzip` and `deflate` (zlib; that is gRPC's "deflate") payloads are inflated and the plaintext is classified; the original compressed bytes are forwarded on allow. Output stops at `DECISION_WAF_DEEP_MAX_BYTES` (`internal/frontend/extproc/decompress.go`), so a small message cannot expand into a bomb. A message that inflates past the cap is oversize and handled by the oversize policy. Other encodings (`snappy`, `zstd`) and corrupt data are uninspectable. They are blocked (413, gRPC 8, `reason=uninspectable`) unless the policy is `allow`, even under `classify_prefix`, because there is no readable prefix to classify. The first design classified only the headers for compressed messages, so declaring `grpc-encoding` was a way to skip payload inspection.
 
-The same applies to HTTP bodies (`internal/frontend/extproc/encoding.go`). A `Content-Encoding` of `gzip`, `x-gzip` or `deflate` (zlib, or the raw deflate some clients send) is inflated within the same bound in `standard` and `deep`, and the original bytes are forwarded. `standard` also unframes a buffered gRPC body that declares a `grpc-encoding` and inflates its compressed messages. Any other coding, several codings stacked, corrupt data, and compressed gRPC-Web are uninspectable: blocked with 413 in `standard`, which has no oversize setting, and in `deep` unless `AILUROS_DEEP_OVERSIZE=allow`. Under `allow` an undecodable HTTP body is classified as sent rather than passed unclassified: the first version passed it, so a plaintext attack only needed a false `Content-Encoding`, which many upstreams ignore on requests. gRPC-Web is refused rather than unframed because browser clients do not compress requests. Earlier, these bodies reached the model as compressed bytes, which it cannot read, so any compressed attack was allowed.
+The same applies to HTTP bodies (`internal/frontend/extproc/encoding.go`). A `Content-Encoding` of `gzip`, `x-gzip` or `deflate` (zlib, or the raw deflate some clients send) is inflated within the same bound in `standard` and `deep`, and the original bytes are forwarded. `standard` also unframes a buffered gRPC body that declares a `grpc-encoding` and inflates its compressed messages. Any other coding, several codings stacked, corrupt data, and compressed gRPC-Web are uninspectable: blocked with 413 in `standard`, which has no oversize setting, and in `deep` unless `DECISION_WAF_DEEP_OVERSIZE=allow`. Under `allow` an undecodable HTTP body is classified as sent rather than passed unclassified: the first version passed it, so a plaintext attack only needed a false `Content-Encoding`, which many upstreams ignore on requests. gRPC-Web is refused rather than unframed because browser clients do not compress requests. Earlier, these bodies reached the model as compressed bytes, which it cannot read, so any compressed attack was allowed.
 
 ### grpc-web is held as HTTP; grpc-web-text is decoded at render time
 
 grpc-web (`application/grpc-web*`) does not use the length-prefixed framing, so `deep` treats it as an ordinary HTTP body: held and classified whole. A deployment that wants per-message decisions can put Envoy's `grpc_web` filter before ext_proc. The text variant is base64. `Request.Render` (`internal/inspect/render.go`, `grpcweb.go`) decodes it in every mode that sends a body, quad by quad because messages may be several padded chunks back to back, and notes "decoded from grpc-web-text" in the prompt. Otherwise an attack would reach the model only as base64. Invalid base64 is rendered as such, with a note.
 
-### Oversize policy: `AILUROS_DEEP_OVERSIZE`
+### Oversize policy: `DECISION_WAF_DEEP_OVERSIZE`
 
-Applies to HTTP bodies over `AILUROS_DEEP_MAX_BYTES`, gRPC messages whose declared length exceeds it, and uninspectable messages.
+Applies to HTTP bodies over `DECISION_WAF_DEEP_MAX_BYTES`, gRPC messages whose declared length exceeds it, and uninspectable messages.
 
-- `classify_prefix` (default): classify the first `DEEP_MAX` bytes (marked truncated); on allow, release what is held and pass the rest unheld. A gRPC message Ailuros cannot decompress is blocked instead.
-- `block`: 413, or gRPC 8 `RESOURCE_EXHAUSTED`, logged `reason=oversize` or `uninspectable`. A 413 from Ailuros means "too large to inspect", not an attack verdict.
+- `classify_prefix` (default): classify the first `DEEP_MAX` bytes (marked truncated); on allow, release what is held and pass the rest unheld. A gRPC message decision-waf cannot decompress is blocked instead.
+- `block`: 413, or gRPC 8 `RESOURCE_EXHAUSTED`, logged `reason=oversize` or `uninspectable`. A 413 from decision-waf means "too large to inspect", not an attack verdict.
 - `allow`: pass through unclassified, logged with the same reasons.
 
 ### Body limits sized to the model, not to memory
 
-`AILUROS_BODY_MAX_BYTES` (`standard`) and `AILUROS_DEEP_MAX_BYTES` (`deep`; accepted up to 64 MiB) both default to 16 KiB. They were 64 KiB and 1 MiB, and doubled as prompt sizes. A live run showed a large body, or a decompression bomb inflating to the cap, making the classifier time out. Under the default `AILUROS_FAILURE_MODE=open` the request then passed unclassified, so anyone could bypass inspection by sending a large body. At 16 KiB a body classifies inside the timeout. Ailuros warns at startup when the active mode's limit exceeds 32 KiB (`largeBodyLimit` in `internal/app/warnings.go`), because larger bodies rarely finish within `AILUROS_CLASSIFIER_TIMEOUT`. Oversize inputs then fall under the oversize rules rather than silently timing out.
+`DECISION_WAF_BODY_MAX_BYTES` (`standard`) and `DECISION_WAF_DEEP_MAX_BYTES` (`deep`; accepted up to 64 MiB) both default to 16 KiB. They were 64 KiB and 1 MiB, and doubled as prompt sizes. A live run showed a large body, or a decompression bomb inflating to the cap, making the classifier time out. Under the default `DECISION_WAF_FAILURE_MODE=open` the request then passed unclassified, so anyone could bypass inspection by sending a large body. At 16 KiB a body classifies inside the timeout. decision-waf warns at startup when the active mode's limit exceeds 32 KiB (`largeBodyLimit` in `internal/app/warnings.go`), because larger bodies rarely finish within `DECISION_WAF_CLASSIFIER_TIMEOUT`. Oversize inputs then fall under the oversize rules rather than silently timing out.
 
 ### Binary bodies are rendered as text runs
 
@@ -68,24 +68,24 @@ gRPC payloads are protobuf, and showing them as base64 left even decompressed at
 
 ### Header mutations set both `value` and `raw_value`
 
-`envoyreq.SetHeader` fills both fields with an overwrite action. ext_proc reads `raw_value` and ext_authz reads `value`, and either alone arrives empty through the other. Incoming header values are read from either field. Allowed requests get `x-ailuros-request-id`, plus the debug header when `AILUROS_EXPOSE_VERDICT=true`. In `deep` mode the headers of a request with a body go upstream before the body is classified, so such a request carries only the stream's `x-ailuros-request-id`, never `x-ailuros-decision`: body decisions stream bytes back with no header mutation.
+`envoyreq.SetHeader` fills both fields with an overwrite action. ext_proc reads `raw_value` and ext_authz reads `value`, and either alone arrives empty through the other. Incoming header values are read from either field. Allowed requests get `x-decision-waf-request-id`, plus the debug header when `DECISION_WAF_EXPOSE_VERDICT=true`. In `deep` mode the headers of a request with a body go upstream before the body is classified, so such a request carries only the stream's `x-decision-waf-request-id`, never `x-decision-waf-decision`: body decisions stream bytes back with no header mutation.
 
 ### Timeouts
 
-- Set `message_timeout` (ext_proc) and `timeout` (ext_authz) to `AILUROS_CLASSIFIER_TIMEOUT` + 500 ms (1.5 s with the 1 s default; Envoy's own default of 200 ms is far too short). The margin lets Ailuros answer, applying its own failure mode, before Envoy gives up. `internal/config` exports the margin and the shipped configs' tests derive their values from it.
-- ext_authz's `timeout` is a real gRPC deadline. Ailuros stops waiting for the classifier 50 ms before it (`envoyreq.WithDeadlineMargin`). A context already past that point gets the failure mode without calling the classifier, so an expired deadline never trips the circuit breaker.
-- ext_proc's `message_timeout` is a timer inside Envoy that Ailuros cannot see. The classifier timeout is what keeps the answer inside it.
+- Set `message_timeout` (ext_proc) and `timeout` (ext_authz) to `DECISION_WAF_CLASSIFIER_TIMEOUT` + 500 ms (1.5 s with the 1 s default; Envoy's own default of 200 ms is far too short). The margin lets decision-waf answer, applying its own failure mode, before Envoy gives up. `internal/config` exports the margin and the shipped configs' tests derive their values from it.
+- ext_authz's `timeout` is a real gRPC deadline. decision-waf stops waiting for the classifier 50 ms before it (`envoyreq.WithDeadlineMargin`). A context already past that point gets the failure mode without calling the classifier, so an expired deadline never trips the circuit breaker.
+- ext_proc's `message_timeout` is a timer inside Envoy that decision-waf cannot see. The classifier timeout is what keeps the answer inside it.
 - In `deep`, `message_timeout` does not apply at all. The classifier timeout is the only bound on each decision. Held bodies are bounded by the HTTP connection manager's `request_timeout` (60 s) and `stream_idle_timeout` (30 s) in `deploy/envoy/deep.yaml`, so a slow client cannot hold up to `DEEP_MAX` bytes of memory forever. Raise them for long uploads or long-lived gRPC streams.
 
-### Envoy failure_mode_allow versus the Ailuros failure mode
+### Envoy failure_mode_allow versus the decision-waf failure mode
 
-`failure_mode_allow` governs only an Ailuros that is unreachable or has reset the stream. The shipped configs set it to `false`, so Envoy fails closed (500 for ext_proc, 503 for ext_authz), while `AILUROS_FAILURE_MODE` defaults to open; [Operations](../operations.md#when-ailuros-itself-is-unreachable) gives the reasoning. Once Ailuros is reachable, the route's failure mode always wins, including after a panic in a handler.
+`failure_mode_allow` governs only an decision-waf that is unreachable or has reset the stream. The shipped configs set it to `false`, so Envoy fails closed (500 for ext_proc, 503 for ext_authz), while `DECISION_WAF_FAILURE_MODE` defaults to open; [Operations](../operations.md#when-decision-waf-itself-is-unreachable) gives the reasoning. Once decision-waf is reachable, the route's failure mode always wins, including after a panic in a handler.
 
 A panic is recovered and answered. A denial the engine had already computed stands. Otherwise the failure mode applies. If applying it panics too, `fail_closed` gets a 503 (gRPC 14), and `fail_open` continues, releasing any held body, rather than resetting. A reset would hand the decision to Envoy's `failure_mode_allow: false` and quietly turn fail_open into fail_closed. Only if rendering that answer also panics does the stream reset. The rule is `frontend.AfterPanic`, shared with ext_authz and forward-auth. Protocol errors (a body before headers) go through the same failure mode. An Envoy reset (context cancelled) stops processing with no response.
 
 ### ext_authz is lite only
 
-`envoy.service.auth.v3.Authorization/Check` (`internal/frontend/extauthz`) builds the request from `attributes.request.http`, the source address, and the SNI. Any body is ignored. Allow returns `OkHttpResponse` with the request-ID header. Deny returns `DeniedHttpResponse` with 400, 403, 413 or 503 (`frontend.DenialFor`), the generic JSON body, and `CheckResponse.status` `INVALID_ARGUMENT`, `PERMISSION_DENIED`, `RESOURCE_EXHAUSTED` or `UNAVAILABLE`, which Envoy maps to gRPC 3, 7, 8 or 14 for gRPC clients. The shipped config uses port 9003, which is off by default (`AILUROS_EXTAUTHZ_ADDR` empty).
+`envoy.service.auth.v3.Authorization/Check` (`internal/frontend/extauthz`) builds the request from `attributes.request.http`, the source address, and the SNI. Any body is ignored. Allow returns `OkHttpResponse` with the request-ID header. Deny returns `DeniedHttpResponse` with 400, 403, 413 or 503 (`frontend.DenialFor`), the generic JSON body, and `CheckResponse.status` `INVALID_ARGUMENT`, `PERMISSION_DENIED`, `RESOURCE_EXHAUSTED` or `UNAVAILABLE`, which Envoy maps to gRPC 3, 7, 8 or 14 for gRPC clients. The shipped config uses port 9003, which is off by default (`DECISION_WAF_EXTAUTHZ_ADDR` empty).
 
 ### Client IP comes from Envoy's view of the connection
 
@@ -111,9 +111,9 @@ The shipped configs request the `source.address` attribute (and the SNI and TLS 
 - **A block in the middle of a gRPC stream is not delivered cleanly once the upstream has replied.** Earlier messages have already reached the upstream. If the upstream has also sent response headers (a streaming server that has replied), Envoy cannot turn the immediate response into `grpc-status` 7, 8 or 14. It resets the stream and the client sees `INTERNAL` (RST_STREAM). Enforcement holds, since the blocked message never reaches the upstream. Delivering the status would need response-trailer processing. Accepted.
 - `deep` adds a classifier call for headers on every request that has a body.
 - gRPC-Web is inspected as one held HTTP body, not per message, unless Envoy's `grpc_web` filter runs first.
-- Compressed gRPC in `gzip`/`deflate` only; other encodings are blocked (or allowed with `AILUROS_DEEP_OVERSIZE=allow`).
+- Compressed gRPC in `gzip`/`deflate` only; other encodings are blocked (or allowed with `DECISION_WAF_DEEP_OVERSIZE=allow`).
 - Protobuf is never decoded to JSON; the model sees readable text runs only.
-- Memory: up to `DEEP_MAX` bytes held per open stream. Bounded by Envoy's request and idle timeouts, not by Ailuros.
+- Memory: up to `DEEP_MAX` bytes held per open stream. Bounded by Envoy's request and idle timeouts, not by decision-waf.
 - Response-side inspection is not implemented.
 
 ## History
