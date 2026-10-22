@@ -342,3 +342,19 @@ func TestIntegerAndEnumMessages(t *testing.T) {
 		}
 	}
 }
+
+func TestCheckRenamed(t *testing.T) {
+	if err := CheckRenamed([]string{"DECISION_WAF_LOG_LEVEL=debug", "PATH=/bin", "XAILUROS_X=1"}); err != nil {
+		t.Errorf("CheckRenamed = %v, want nil", err)
+	}
+	err := CheckRenamed([]string{"PATH=/bin", "AILUROS_LOG_LEVEL=debug", "AILUROS_CLASSIFIER_API_KEY=secret", "AILUROS_EMPTY="})
+	want := "AILUROS_CLASSIFIER_API_KEY: renamed to DECISION_WAF_CLASSIFIER_API_KEY; AILUROS_* variables are no longer read\n" +
+		"AILUROS_EMPTY: renamed to DECISION_WAF_EMPTY; AILUROS_* variables are no longer read\n" +
+		"AILUROS_LOG_LEVEL: renamed to DECISION_WAF_LOG_LEVEL; AILUROS_* variables are no longer read"
+	if err == nil || err.Error() != want {
+		t.Errorf("CheckRenamed = %v\nwant %s", err, want)
+	}
+	if strings.Contains(err.Error(), "secret") {
+		t.Error("error shows a variable's value")
+	}
+}

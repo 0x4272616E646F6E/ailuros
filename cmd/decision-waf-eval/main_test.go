@@ -50,7 +50,14 @@ func newCLI(vars map[string]string, cls classifier.Classifier, probeErr error) *
 	h := &harness{stdout: &bytes.Buffer{}, stderr: &bytes.Buffer{}}
 	h.cli = cli{
 		stdout: h.stdout, stderr: h.stderr,
-		lookup:   func(k string) (string, bool) { v, ok := vars[k]; return v, ok },
+		lookup: func(k string) (string, bool) { v, ok := vars[k]; return v, ok },
+		environ: func() []string {
+			var kv []string
+			for k, v := range vars {
+				kv = append(kv, k+"="+v)
+			}
+			return kv
+		},
 		readFile: os.ReadFile,
 		backend: func(config.Config, *slog.Logger) (classifier.Classifier, func(context.Context) error, error) {
 			return cls, func(context.Context) error { return probeErr }, nil
@@ -216,6 +223,7 @@ func TestInvalidInputs(t *testing.T) {
 		{"bad dataset", env("m"), []string{"run", "--dataset", bad}, "line 2"},
 		{"missing dataset", env("m"), []string{"run", "--dataset", ds + ".missing"}, "no such file"},
 		{"no backend", map[string]string{}, []string{"run", "--dataset", ds}, "DECISION_WAF_CLASSIFIER_BACKEND"},
+		{"old variable", map[string]string{"AILUROS_CLASSIFIER_MODEL": "m"}, []string{"run", "--dataset", ds}, "AILUROS_CLASSIFIER_MODEL: renamed to DECISION_WAF_CLASSIFIER_MODEL"},
 		{"not results", env("m"), []string{"report", ds}, "header"},
 	}
 	for _, c := range cases {

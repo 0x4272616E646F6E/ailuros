@@ -2,6 +2,8 @@
 
 decision-waf is configured with `DECISION_WAF_*` environment variables, read once at startup, and an optional YAML policy file.
 
+The variables had a different prefix before 0.2.0. decision-waf and `decision-waf-eval run` refuse to start while any variable with the old prefix is set, and name the replacement for each; the [CHANGELOG](../CHANGELOG.md) has the full rename table.
+
 ## Environment variables
 
 | Variable | Default | Purpose |

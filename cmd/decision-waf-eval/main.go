@@ -32,7 +32,7 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	code := cli{
 		stdout: os.Stdout, stderr: os.Stderr,
-		lookup: os.LookupEnv, readFile: os.ReadFile,
+		lookup: os.LookupEnv, environ: os.Environ, readFile: os.ReadFile,
 		backend: backend.New, now: time.Now,
 	}.main(ctx, os.Args[1:])
 	stop()
@@ -44,6 +44,7 @@ type backendFunc func(config.Config, *slog.Logger) (classifier.Classifier, func(
 type cli struct {
 	stdout, stderr io.Writer
 	lookup         func(string) (string, bool)
+	environ        func() []string
 	readFile       func(string) ([]byte, error)
 	backend        backendFunc
 	now            func() time.Time

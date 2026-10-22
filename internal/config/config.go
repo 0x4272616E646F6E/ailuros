@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"log/slog"
 	"net/url"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -173,6 +174,22 @@ func Load(lookup func(string) (string, bool), readFile func(string) ([]byte, err
 		return Config{}, errors.Join(errs...)
 	}
 	return c, nil
+}
+
+func CheckRenamed(environ []string) error {
+	var names []string
+	for _, kv := range environ {
+		name, _, _ := strings.Cut(kv, "=")
+		if strings.HasPrefix(name, "AILUROS_") {
+			names = append(names, name)
+		}
+	}
+	slices.Sort(names)
+	var errs []error
+	for _, name := range slices.Compact(names) {
+		errs = append(errs, fmt.Errorf("%s: renamed to %s; AILUROS_* variables are no longer read", name, "DECISION_WAF_"+strings.TrimPrefix(name, "AILUROS_")))
+	}
+	return errors.Join(errs...)
 }
 
 func readError(err error) string {

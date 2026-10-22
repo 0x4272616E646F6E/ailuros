@@ -23,6 +23,9 @@ func main() {
 }
 
 func run(ctx context.Context) error {
+	if err := config.CheckRenamed(os.Environ()); err != nil {
+		return fmt.Errorf("invalid configuration:\n%w", err)
+	}
 	cfg, err := config.Load(os.LookupEnv, os.ReadFile)
 	if err != nil {
 		return fmt.Errorf("invalid configuration:\n%w", err)

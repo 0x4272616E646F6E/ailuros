@@ -47,6 +47,9 @@ func (c cli) runCmd(ctx context.Context, args []string) (err error) {
 		return usageError{errors.New("--concurrency must be at least 1")}
 	}
 
+	if err := config.CheckRenamed(c.environ()); err != nil {
+		return invalidError{fmt.Errorf("invalid configuration:\n%w", err)}
+	}
 	cfg, err := config.Load(c.lookup, c.readFile)
 	if err != nil {
 		return invalidError{fmt.Errorf("invalid configuration:\n%w", err)}
