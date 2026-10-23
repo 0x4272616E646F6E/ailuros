@@ -181,8 +181,8 @@ func TestShippedSelfhosted(t *testing.T) {
 			lookalikes++
 		}
 	}
-	want := map[string]int{"benign": 133, "injection": 57, "xss": 23, "file_access": 20, "recon": 30, "auth_abuse": 8}
-	if !reflect.DeepEqual(counts, want) || lookalikes != 24 || ds.Header.Name != "selfhosted-2026-10" {
+	want := map[string]int{"benign": 145, "injection": 63, "xss": 23, "file_access": 20, "recon": 30, "auth_abuse": 8, "ssrf_redirect": 10}
+	if !reflect.DeepEqual(counts, want) || lookalikes != 24 || ds.Header.Name != "selfhosted-2026-10b" {
 		t.Errorf("selfhosted: labels %v, %d lookalikes, name %q", counts, lookalikes, ds.Header.Name)
 	}
 }

@@ -197,9 +197,45 @@ for user in ["admin", "root", "administrator", "test", "guest", "jsmith", "user1
     add("auth_abuse", "POST", host, "/api/user/login" if host.startswith("auth") else "/identity/connect/token" if host.startswith("vault") else "/user/login" if host.startswith("forgejo") else "/auth/login_flow",
         f"username={user}&password={quote(random.choice(['123456', 'password1', 'admin', 'Summer2026!', 'qwerty']))}", {"user-agent": [random.choice(["python-requests/2.32.4", "Go-http-client/1.1", "Hydra v9.6"])], "content-type": ["application/x-www-form-urlencoded"], "accept": ["*/*"]}, tags=["query"])
 
+EXTRAS = [
+    ("ssrf_redirect", "GET", "jellyfin.example.com", "/Items/RemoteImages/Download", "imageUrl=" + quote("http://169.254.169.254/latest/meta-data/iam/security-credentials/")),
+    ("ssrf_redirect", "GET", "homeassistant.example.com", "/api/image_proxy", "url=" + quote("http://localhost:8123/api/config")),
+    ("ssrf_redirect", "POST", "forgejo.example.com", "/api/v1/repos/alice/infra/hooks", "url=" + quote("http://10.0.0.1/admin")),
+    ("ssrf_redirect", "GET", "glance.example.com", "/api/pages/home/content/", "feed=" + quote("file:///etc/passwd")),
+    ("ssrf_redirect", "GET", "sonarr.example.com", "/api/v3/importlist/action/fetch", "url=" + quote("gopher://127.0.0.1:6379/_INFO")),
+    ("ssrf_redirect", "GET", "radarr.example.com", "/api/v3/mediacover/proxy", "url=" + quote("http://metadata.google.internal/computeMetadata/v1/")),
+    ("ssrf_redirect", "GET", "auth.example.com", "/login", "redirect_uri=" + quote("//evil.example.net/phish")),
+    ("ssrf_redirect", "GET", "auth.example.com", "/login", "redirect_uri=" + quote("https://evil.example.net/steal")),
+    ("ssrf_redirect", "GET", "vaultwarden.example.com", "/sso/callback", "next=" + quote("/\\evil.example.net")),
+    ("ssrf_redirect", "GET", "forgejo.example.com", "/user/login", "redirect_to=" + quote("https://example.com.evil.example.net/")),
+    ("injection", "GET", "sonarr.example.com", "/api/v3/series/lookup", "term=" + quote("bear%0d%0aSet-Cookie:%20session=attacker", safe="%")),
+    ("injection", "GET", "auth.example.com", "/logout", "redirect_uri=" + quote("/%0d%0aLocation:%20https://evil.example.net", safe="%/")),
+    ("injection", "GET", "suwayomi.example.com", "/api/v1/source/1/search", "searchTerm=" + quote("frieren\r\nX-Injected: 1")),
+    ("injection", "GET", "auth.example.com", "/api/user/login", "username=admin&password[$ne]=x"),
+    ("injection", "GET", "vaultwarden.example.com", "/api/accounts/prelogin", "email[$gt]=&kdf[$where]=sleep(5000)"),
+    ("injection", "GET", "forgejo.example.com", "/api/v1/users/search", "q=" + quote('{"$regex":".*"}')),
+    ("benign", "GET", "auth.example.com", "/login", "redirect_uri=" + quote("https://suwayomi.example.com/library")),
+    ("benign", "GET", "auth.example.com", "/login", "redirect_uri=" + quote("https://jellyfin.example.com/web/")),
+    ("benign", "GET", "forgejo.example.com", "/user/login", "redirect_to=" + quote("/alice/infra/pulls")),
+    ("benign", "GET", "vaultwarden.example.com", "/sso/callback", "code=4f9a2c1e&state=Zk3pQw8x"),
+    ("benign", "POST", "forgejo.example.com", "/api/v1/repos/alice/infra/hooks", "url=" + quote("https://hooks.slack.com/services/T000/B000/XXXX")),
+    ("benign", "GET", "jellyfin.example.com", "/Items/RemoteImages/Download", "imageUrl=" + quote("https://image.tmdb.org/t/p/original/abc123.jpg")),
+    ("benign", "GET", "glance.example.com", "/api/pages/home/content/", "feed=" + quote("https://www.reddit.com/r/selfhosted/.rss")),
+    ("benign", "GET", "homeassistant.example.com", "/api/image_proxy", "url=" + quote("https://brands.home-assistant.io/hue/icon.png")),
+    ("benign", "GET", "sonarr.example.com", "/api/v3/importlist/action/fetch", "url=" + quote("https://api.trakt.tv/users/alice/watchlist")),
+    ("benign", "GET", "radarr.example.com", "/api/v3/mediacover/proxy", "url=" + quote("https://image.tmdb.org/t/p/w500/xyz.jpg")),
+    ("benign", "GET", "auth.example.com", "/logout", "redirect_uri=" + quote("https://auth.example.com/login")),
+    ("benign", "GET", "suwayomi.example.com", "/api/v1/source/1/search", "searchTerm=" + quote("http://example.com in anime")),
+]
+for i, (label, method, host, path, query) in enumerate(EXTRAS, 1):
+    url_param = any(k in query for k in ("url", "redirect", "next=", "feed=", "imageUrl"))
+    rows.append({"id": f"x-{i:03d}", "label": label, "method": method, "scheme": "https", "host": host, "path": path, "query": query, "protocol": "HTTP/2",
+                 "headers": {"user-agent": [SAFARI], "accept": ["application/json, text/plain, */*"], "accept-language": ["en-US,en;q=0.9"], "referer": [f"https://{host}/"]},
+                 "tags": ["extra", "url-param" if url_param else "query"]})
+
 out = sys.argv[1]
 with open(out, "w") as f:
-    f.write(json.dumps({"decision_waf_eval_dataset": 1, "name": "selfhosted-2026-10", "description": "Semi-synthetic self-hosted traffic: request shapes from common self-hosted apps, lookalike benign queries, common attack payloads and scanner probes. Headers only (lite mode)."}) + "\n")
+    f.write(json.dumps({"decision_waf_eval_dataset": 1, "name": "selfhosted-2026-10b", "description": "Semi-synthetic self-hosted traffic: request shapes from common self-hosted apps, lookalike benign queries, common attack payloads and scanner probes. Headers only (lite mode). Includes hand-written SSRF, open-redirect, CRLF and NoSQL requests and benign URL-parameter lookalikes."}) + "\n")
     for r in rows:
         f.write(json.dumps(r) + "\n")
 labels = {}
