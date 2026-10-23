@@ -5,7 +5,7 @@ All notable changes to decision-waf are listed here. The format follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Before 1.0, a
 minor version may change behavior or configuration; the entry says how.
 
-## [Unreleased]
+## [0.3.0] - 2026-10-23
 
 ### Changed
 
@@ -145,5 +145,6 @@ The first release.
   SBOMs and SLSA build provenance.
 
 [Unreleased]: https://github.com/0x4272616E646F6E/decision-waf/compare/v0.2.0...HEAD
+[0.3.0]: https://github.com/0x4272616E646F6E/decision-waf/releases/tag/v0.3.0
 [0.2.0]: https://github.com/0x4272616E646F6E/decision-waf/releases/tag/v0.2.0
 [0.1.0]: https://github.com/0x4272616E646F6E/decision-waf/releases/tag/v0.1.0
