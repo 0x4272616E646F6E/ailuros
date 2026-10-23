@@ -26,7 +26,7 @@ Loading fails with every problem listed, each with its line number: unknown fiel
 
 ### Ship a small hand-written sample, not an attack corpus
 
-`eval/datasets/sample.jsonl` holds 24 requests: 10 benign (five tagged `lookalike`, benign requests that resemble attacks) and 14 classic, illustrative attacks across `sqli`, `xss`, `path_traversal`, `rce` and `scanner`. It exists so the tool runs out of the box and the tests have data. It is far too small to tune a threshold on, and the usage guide and every report say so.
+`eval/datasets/sample.jsonl` holds 24 requests: 10 benign (five tagged `lookalike`, benign requests that resemble attacks) and 14 classic, illustrative attacks across `injection`, `xss`, `file_access` and `recon`. It exists so the tool runs out of the box and the tests have data. It is far too small to tune a threshold on, and the usage guide and every report say so.
 
 decision-waf does not generate or ship a larger attack corpus, and does not redistribute third-party datasets. Operators evaluate on their own labelled traffic, or on public labelled HTTP datasets they obtain under those datasets' own licences; the usage guide has a recipe for converting one. An earlier design had a `generate` command that would author a 1,200-request corpus; it was dropped. The repo should not be a store of attack payloads, a synthetic corpus would flatter or punish a model in ways real traffic does not, and the people who need an answer have better data than we could invent.
 

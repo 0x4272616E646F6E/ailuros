@@ -5,6 +5,35 @@ All notable changes to decision-waf are listed here. The format follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Before 1.0, a
 minor version may change behavior or configuration; the entry says how.
 
+## [Unreleased]
+
+### Changed
+
+- The default attack categories are replaced by a coarser set, in this
+  order: `injection`, `xss`, `file_access`, `ssrf_redirect`, `recon`,
+  `auth_abuse` and `other_attack` (`benign` is unchanged). The new
+  `injection` description also covers NoSQL operators and CRLF header
+  injection; `ssrf_redirect` and `other_attack` are new.
+
+  | Before | From this release |
+  |---|---|
+  | `sqli` | `injection` |
+  | `rce` | `injection` |
+  | `xss` | `xss` |
+  | `path_traversal` | `file_access` |
+  | `scanner` | `recon` |
+  | `credential_stuffing` | `auth_abuse` |
+
+  Policy files with their own `categories` key are unaffected. Deployments
+  on the defaults log and count the new names, so dashboards and alerts
+  keyed on the old `category` values (for example on
+  `decision_waf_decisions_total`) need updating, as do datasets labelled
+  with the old names.
+- `eval/datasets/sample.jsonl` and `eval/datasets/selfhosted.jsonl` use the
+  new labels. The self-hosted dataset (now `selfhosted-2026-10b`) gains 28
+  hand-written requests: SSRF and open-redirect attempts, CRLF and NoSQL
+  injections, and benign requests with URLs in parameters (299 in all).
+
 ## [0.2.0] - 2026-10-22
 
 ### Changed (breaking)
@@ -115,5 +144,6 @@ The first release.
 - Release images for linux/amd64 and linux/arm64, signed with cosign, with
   SBOMs and SLSA build provenance.
 
+[Unreleased]: https://github.com/0x4272616E646F6E/decision-waf/compare/v0.2.0...HEAD
 [0.2.0]: https://github.com/0x4272616E646F6E/decision-waf/releases/tag/v0.2.0
 [0.1.0]: https://github.com/0x4272616E646F6N/ailuros/releases/tag/v0.1.0

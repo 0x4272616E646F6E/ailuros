@@ -39,7 +39,7 @@ Integration tests are Go tests behind the `integration` build tag that run `dock
 
 `test/integration/stubmodel` implements the Jev endpoint and decides on markers in the request text, so no model or API key is needed:
 
-- `attack` returns `sqli` at 0.99 and `xss-marker` returns `xss`; anything else is benign.
+- `attack` returns `injection` at 0.99 and `xss-marker` returns `xss`; anything else is benign.
 - `stub-fail` returns HTTP 503, `stub-garbage` returns malformed JSON, `stub-offformat` returns a well-formed answer whose choice is not a label, and `stub-slow` waits 3 s (the stub tests set a 1 s classifier timeout). A prompt over 32 KiB is also slow, to model a model that chokes on large input.
 - It records every prompt. `GET /prompts?contains=<marker>` returns those containing a test-unique marker, so tests find "what the model saw" without decision-waf forwarding its request ID.
 

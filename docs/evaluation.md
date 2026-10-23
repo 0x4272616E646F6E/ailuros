@@ -67,7 +67,7 @@ labelled request per line.
 ```json
 {"decision_waf_eval_dataset": 1, "name": "shop-2026-10", "description": "Sampled production traffic, hand-labelled"}
 {"id": "r-1", "label": "benign", "method": "GET", "scheme": "https", "host": "shop.example.com", "path": "/search", "query": "q=red+shoes", "headers": {"user-agent": ["Mozilla/5.0"]}, "tags": ["query"]}
-{"id": "r-2", "label": "sqli", "method": "POST", "path": "/login", "body_b64": "dXNlcj1hZG1pbictLSZwYXNzPXg=", "tags": ["body"]}
+{"id": "r-2", "label": "injection", "method": "POST", "path": "/login", "body_b64": "dXNlcj1hZG1pbictLSZwYXNzPXg=", "tags": ["body"]}
 ```
 
 `label` is `benign` or a category from your policy; `method` and `path` are
@@ -94,14 +94,18 @@ the source, check the labels: the report can only be as right as they are.
 
 ## The self-hosted dataset
 
-`eval/datasets/selfhosted.jsonl` is 271 semi-synthetic requests in the shape a
-self-hosted stack sees through forward-auth (headers only): 133 benign
+`eval/datasets/selfhosted.jsonl` is 299 semi-synthetic requests in the shape a
+self-hosted stack sees through forward-auth (headers only): 145 benign
 requests to apps such as Sonarr, Radarr, Jellyfin, Home Assistant, Vaultwarden
 and Forgejo from browsers and their own clients, 24 of them `lookalike`
-searches (`O'Brien`, `cat /etc`, `<3 love`), and 138 attacks: SQL injection,
+searches (`O'Brien`, `cat /etc`, `<3 love`), and 154 attacks: SQL injection,
 XSS, command and template injection including Log4Shell, path traversal,
 scanner probes and scanner user agents, payloads in custom headers, and
-scripted logins. `eval/gen/selfhosted.py` regenerates it byte for byte. It is
+scripted logins. 28 of the requests (tagged `extra`) were added by hand: 10
+SSRF and open-redirect attempts, 6 CRLF and NoSQL injections, and 12 benign
+requests that carry a URL or redirect target in a parameter. By label: 63
+`injection`, 30 `recon`, 23 `xss`, 20 `file_access`, 10 `ssrf_redirect` and 8
+`auth_abuse`. `eval/gen/selfhosted.py` regenerates it byte for byte. It is
 large enough to compare models, but it is not recorded attack traffic, so
 check a threshold against your own traffic before relying on it.
 
