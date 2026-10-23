@@ -146,4 +146,4 @@ The first release.
 
 [Unreleased]: https://github.com/0x4272616E646F6E/decision-waf/compare/v0.2.0...HEAD
 [0.2.0]: https://github.com/0x4272616E646F6E/decision-waf/releases/tag/v0.2.0
-[0.1.0]: https://github.com/0x4272616E646F6N/ailuros/releases/tag/v0.1.0
+[0.1.0]: https://github.com/0x4272616E646F6E/decision-waf/releases/tag/v0.1.0
