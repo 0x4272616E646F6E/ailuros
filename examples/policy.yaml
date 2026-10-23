@@ -6,7 +6,7 @@ categories:
   - name: file_access
     description: "Path traversal or local file inclusion: ../ sequences, encoded variants, or requests for sensitive files such as /etc/passwd."
   - name: ssrf_redirect
-    description: "Server-side request forgery or open redirect: a URL, IP address or internal hostname in a parameter or header that the server might fetch or redirect to, pointing at a cloud metadata address (169.254.169.254), localhost, private networks, file:// or gopher://, or at an unrelated external site, including //host and backslash tricks."
+    description: "Server-side request forgery or open redirect: a URL, IP address or internal hostname in a parameter or header that the server might fetch or redirect to, pointing at a cloud metadata address (169.254.169.254), localhost, private networks, file:// or gopher://, or at an unrelated external site, including //host and backslash tricks. A URL pointing at the site's own hosts, a relative path, or a well-known public service is normal."
   - name: recon
     description: "Automated reconnaissance: vulnerability scanners, probing for admin panels, backups, .git or .env files, or known exploit paths."
   - name: auth_abuse
