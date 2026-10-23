@@ -1,4 +1,4 @@
-> Illustrative example of decision-waf-eval output: `mradermacher/h2o-lightning-4b` (a GGUF build of H2O.ai's h2o-lightning-4b, served by LM Studio, `openai` backend, `DECISION_WAF_CLASSIFIER_TIMEOUT=60s`) on the 24-request shipped sample. Through a chat API it reasons before answering, so each call includes its thinking time; served by llama.cpp server through the `jev` backend it does not (see `h2o-lightning-4b-selfhosted.md`). The sample is far too small to choose a threshold with; this is not a recommendation.
+> Produced with the categories before 0.3.0 (`sqli`, `rce`, `path_traversal`, `scanner`, …). Illustrative example of decision-waf-eval output: `mradermacher/h2o-lightning-4b` (a GGUF build of H2O.ai's h2o-lightning-4b, served by LM Studio, `openai` backend, `DECISION_WAF_CLASSIFIER_TIMEOUT=60s`) on the 24-request shipped sample. Through a chat API it reasons before answering, so each call includes its thinking time; served by llama.cpp server through the `jev` backend it does not (see `h2o-lightning-4b-selfhosted.md`). The sample is far too small to choose a threshold with; this is not a recommendation.
 
 # decision-waf-eval report
 

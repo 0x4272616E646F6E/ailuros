@@ -1,4 +1,4 @@
-> Illustrative example of decision-waf-eval output: hosted Jev `jev-latest` (`https://api.typesafe.ai`, `jev` backend) on the 24-request shipped sample. The sample is far too small to choose a threshold with; this is not a recommendation.
+> Produced with the categories before 0.3.0 (`sqli`, `rce`, `path_traversal`, `scanner`, …). Illustrative example of decision-waf-eval output: hosted Jev `jev-latest` (`https://api.typesafe.ai`, `jev` backend) on the 24-request shipped sample. The sample is far too small to choose a threshold with; this is not a recommendation.
 
 # decision-waf-eval report
 

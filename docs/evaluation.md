@@ -110,17 +110,21 @@ large enough to compare models, but it is not recorded attack traffic, so
 check a threshold against your own traffic before relying on it.
 
 Two decision models served by llama.cpp server through the `jev` backend,
-`DECISION_WAF_INSPECTION_MODE=lite` (reports in `eval/results/*-selfhosted.md`):
+`DECISION_WAF_INSPECTION_MODE=lite`, default categories (reports in
+`eval/results/*-selfhosted.md`):
 
 | Threshold | Model | Precision | Recall | False-positive rate | F1 |
 |---|---|---|---|---|---|
-| 0.8 | `d1-3B` (Q8_0) | 0.985 | 0.486 | 0.008 | 0.650 |
-| 0.8 | `h2o-lightning-4b` (Q8_0) | 0.932 | 0.899 | 0.068 | 0.915 |
-| 0.9 | `d1-3B` | 1.000 | 0.362 | 0.000 | 0.532 |
-| 0.9 | `h2o-lightning-4b` | 0.945 | 0.877 | 0.053 | 0.910 |
+| 0.8 | `d1-3B` (Q8_0) | 0.989 | 0.565 | 0.007 | 0.719 |
+| 0.8 | `h2o-lightning-4b` (Q8_0) | 0.880 | 0.903 | 0.131 | 0.891 |
+| 0.9 | `d1-3B` | 1.000 | 0.461 | 0.000 | 0.631 |
+| 0.9 | `h2o-lightning-4b` | 0.945 | 0.896 | 0.055 | 0.920 |
 
-`h2o-lightning-4b` catches more than twice as many attacks and names the
-right category for 96% of them (`d1-3B`: 87%); most of its false positives
-are `lookalike` searches. Served through the `openai` backend instead, the
-same `d1-3B` reasons before answering and timed out on 269 of the 271
-requests at a 10 s timeout.
+`h2o-lightning-4b` catches about twice as many attacks, including all 16
+`extra` SSRF, redirect, CRLF and NoSQL attacks at 0.9, and names the right
+category for 96% of the attacks it flags (`d1-3B`: 87%). At 0.9, 7 of its 8
+false positives are `lookalike` searches; at 0.8, benign URL parameters such
+as a `redirect_uri` back to the site start to score as `ssrf_redirect`.
+Served through the `openai` backend instead, `d1-3B` reasons before
+answering: in an earlier run on the first 271 requests it timed out on 269 of
+them at a 10 s timeout.
