@@ -19,7 +19,7 @@ func TestResolveDefaults(t *testing.T) {
 
 func TestResolvePrecedence(t *testing.T) {
 	p := &Policy{
-		Categories: []Category{{Name: "sqli"}, {Name: "scanner"}},
+		Categories: []Category{{Name: "injection"}, {Name: "recon"}},
 		Routes: []Route{
 			{Match: Match{PathPrefix: "/admin"}, FailureMode: FailClosed},
 			{Match: Match{PathPrefix: "/api"}, Threshold: ptr(0.5)},

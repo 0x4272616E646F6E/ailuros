@@ -103,7 +103,7 @@ func TestServesDecisions(t *testing.T) {
 		t.Errorf("/attack = %d, want 403", got)
 	}
 	_, metrics := get(t, "http://"+a.AdminAddr()+"/metrics")
-	want := `decision_waf_decisions_total{category="sqli",frontend="forwardauth",outcome="block",route="default"} 1`
+	want := `decision_waf_decisions_total{category="injection",frontend="forwardauth",outcome="block",route="default"} 1`
 	if !strings.Contains(metrics, want) {
 		t.Errorf("metrics missing %s", want)
 	}
@@ -300,7 +300,7 @@ func TestBackendEngineMatchesServer(t *testing.T) {
 	cls := fake.New(func(_ context.Context, r *inspect.Request, _ []policy.Category) (classifier.Verdict, error) {
 		switch {
 		case r.Path == "/evil", r.Query == "q=evil":
-			return classifier.Verdict{Benign: 0.1, Category: "sqli", Confidence: 0.9}, nil
+			return classifier.Verdict{Benign: 0.1, Category: "injection", Confidence: 0.9}, nil
 		case r.Path == "/borderline":
 			return classifier.Verdict{Benign: 0.45, Category: "xss", Confidence: 0.5}, nil
 		case r.Path == "/offlabel":

@@ -24,8 +24,8 @@ func TestDecode(t *testing.T) {
 		t.Fatalf("Decode = %+v, %v", v, err)
 	}
 	for _, c := range []struct{ name, line, want string }{
-		{"case variant", `{"label":"benign","LABEL":"sqli"}`, `unknown field "LABEL"`},
-		{"duplicate", `{"label":"benign","label":"sqli"}`, `duplicate key "label"`},
+		{"case variant", `{"label":"benign","LABEL":"injection"}`, `unknown field "LABEL"`},
+		{"duplicate", `{"label":"benign","label":"injection"}`, `duplicate key "label"`},
 		{"nested case", `{"info":{"NAME":"x"}}`, `unknown field "NAME"`},
 		{"in a list", `{"list":[{"name":"a","name":"b"}]}`, `duplicate key "name"`},
 		{"in a map", `{"headers":{"a":["1"],"a":["2"]}}`, `duplicate key "a"`},

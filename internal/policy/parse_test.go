@@ -23,9 +23,9 @@ func TestParseEmptyUsesDefaults(t *testing.T) {
 func TestParseFull(t *testing.T) {
 	p, err := Parse([]byte(`
 categories:
-  - name: sqli
+  - name: injection
     description: SQL injection
-  - name: scanner
+  - name: recon
 routes:
   - match: { path_prefix: /admin }
     failure_mode: closed
@@ -38,10 +38,10 @@ redact:
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(p.Categories) != 2 || p.Categories[0].Name != "sqli" || p.Categories[0].Description != "SQL injection" {
+	if len(p.Categories) != 2 || p.Categories[0].Name != "injection" || p.Categories[0].Description != "SQL injection" {
 		t.Errorf("categories = %+v", p.Categories)
 	}
-	if p.Categories[1] != (Category{Name: "scanner"}) {
+	if p.Categories[1] != (Category{Name: "recon"}) {
 		t.Errorf("categories[1] = %+v", p.Categories[1])
 	}
 	if p.Routes[0].Match.PathPrefix != "/admin" || p.Routes[0].FailureMode != FailClosed {
@@ -61,9 +61,9 @@ func TestParseRejects(t *testing.T) {
 		"unknown key":         "categoriez: []",
 		"empty categories":    "categories: []",
 		"benign redefined":    "categories: [{name: benign}]",
-		"bad name":            "categories: [{name: SQLi}]",
-		"duplicate":           "categories: [{name: sqli}, {name: sqli}]",
-		"category threshold":  "categories: [{name: sqli, threshold: 0.6}]",
+		"bad name":            "categories: [{name: Injection}]",
+		"duplicate":           "categories: [{name: injection}, {name: injection}]",
+		"category threshold":  "categories: [{name: injection, threshold: 0.6}]",
 		"threshold zero":      "routes: [{match: {path_prefix: /}, threshold: 0}]",
 		"threshold above one": "routes: [{match: {path_prefix: /}, threshold: 1.5}]",
 		"empty match":         "routes: [{failure_mode: closed}]",
@@ -82,7 +82,7 @@ func TestParseRejects(t *testing.T) {
 }
 
 func TestParseRejectsCategoryThreshold(t *testing.T) {
-	_, err := Parse([]byte("categories: [{name: scanner, threshold: 0.6}]"))
+	_, err := Parse([]byte("categories: [{name: recon, threshold: 0.6}]"))
 	if err == nil || !strings.Contains(err.Error(), "threshold") {
 		t.Errorf("err = %v, want an unknown-key error naming threshold", err)
 	}
@@ -120,10 +120,10 @@ func TestLoad(t *testing.T) {
 		t.Errorf("Load(\"\") = %+v, %v; want Default()", p, err)
 	}
 	path := filepath.Join(t.TempDir(), "policy.yaml")
-	if err := os.WriteFile(path, []byte("categories: [{name: rce}]"), 0o644); err != nil {
+	if err := os.WriteFile(path, []byte("categories: [{name: injection}]"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if p, err := Load(path); err != nil || p.Categories[0].Name != "rce" {
+	if p, err := Load(path); err != nil || p.Categories[0].Name != "injection" {
 		t.Errorf("Load(file) = %+v, %v", p, err)
 	}
 	if _, err := Load(filepath.Join(t.TempDir(), "missing.yaml")); err == nil {

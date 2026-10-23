@@ -51,11 +51,11 @@ func TestOutcomes(t *testing.T) {
 		conf   float64
 		want   Outcome
 	}{
-		{"clearly benign", 0.99, "sqli", 0.01, Allow},
-		{"clear attack", 0.05, "sqli", 0.95, Block},
-		{"attack score exactly at threshold", 0.2, "sqli", 0.8, Block},
-		{"attack score just below threshold", 0.21, "sqli", 0.79, Allow},
-		{"split attack", 0.045, "credential_stuffing", 0.58, Block},
+		{"clearly benign", 0.99, "injection", 0.01, Allow},
+		{"clear attack", 0.05, "injection", 0.95, Block},
+		{"attack score exactly at threshold", 0.2, "injection", 0.8, Block},
+		{"attack score just below threshold", 0.21, "injection", 0.79, Allow},
+		{"split attack", 0.045, "auth_abuse", 0.58, Block},
 		{"no category reported", 0.1, "", 0, Block},
 		{"benign with no category", 1, "", 0, Allow},
 	}
@@ -72,7 +72,7 @@ func TestRouteOverrides(t *testing.T) {
 	p := policy.Default()
 	p.Routes = []policy.Route{{Match: policy.Match{PathPrefix: "/admin"}, FailureMode: policy.FailClosed, Threshold: &th}}
 
-	e := NewEngine(verdict(0.4, "sqli", 0.3), p, defaults, nil)
+	e := NewEngine(verdict(0.4, "injection", 0.3), p, defaults, nil)
 	if d := e.Decide(ctx, &inspect.Request{Path: "/admin/users"}, src); d.Outcome != Block || d.Route != "0" {
 		t.Errorf("/admin attack 0.6: %+v, want block on route 0", d)
 	}
@@ -176,7 +176,7 @@ func TestDebugHeader(t *testing.T) {
 		d    Decision
 		want string
 	}{
-		{Decision{Outcome: Block, Classified: true, Verdict: classifier.Verdict{Benign: 0.045, Category: "sqli", Confidence: 0.576}}, "block; attack_score=0.955; category=sqli; confidence=0.576"},
+		{Decision{Outcome: Block, Classified: true, Verdict: classifier.Verdict{Benign: 0.045, Category: "injection", Confidence: 0.576}}, "block; attack_score=0.955; category=injection; confidence=0.576"},
 		{Decision{Outcome: Allow, Classified: true, Verdict: classifier.Verdict{Benign: 0.97}}, "allow; attack_score=0.030"},
 		{Decision{Outcome: FailClosed, Reason: classifier.ReasonTimeout}, "fail_closed; reason=timeout"},
 		{Decision{Outcome: Block, Note: NoteOversize}, "block; reason=oversize"},
@@ -249,7 +249,7 @@ func TestBadOutput(t *testing.T) {
 }
 
 func TestThresholdBoundaryIsInclusive(t *testing.T) {
-	e := NewEngine(verdict(0.9, "sqli", 0.1), policy.Default(), policy.Defaults{Threshold: 0.1, FailureMode: policy.FailOpen}, nil)
+	e := NewEngine(verdict(0.9, "injection", 0.1), policy.Default(), policy.Defaults{Threshold: 0.1, FailureMode: policy.FailOpen}, nil)
 	if d := e.Decide(ctx, &inspect.Request{Path: "/"}, src); d.Outcome != Block {
 		t.Errorf("attack score at the threshold: %s, want block", d.Outcome)
 	}

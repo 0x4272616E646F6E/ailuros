@@ -64,7 +64,7 @@ func TestServesEnvoyFrontends(t *testing.T) {
 
 	_, metrics := get(t, "http://"+a.AdminAddr()+"/metrics")
 	for _, want := range []string{
-		`decision_waf_decisions_total{category="sqli",frontend="extauthz",outcome="block",route="default"} 1`,
+		`decision_waf_decisions_total{category="injection",frontend="extauthz",outcome="block",route="default"} 1`,
 		`decision_waf_decisions_total{category="benign",frontend="extproc",outcome="allow",route="default"} 1`,
 	} {
 		if !strings.Contains(metrics, want) {

@@ -83,7 +83,7 @@ func TestMarkdown(t *testing.T) {
 		"# decision-waf-eval report",
 		"> **Warning:** 2 of 11 requests failed",
 		"| 0.750 | 0.750 | 0.750 | 0.200 | 3 | 1 | 4 | 1 |",
-		"| sqli | 3 | 2 | 0.667 | 1 | 1 |",
+		"| injection | 3 | 2 | 0.667 | 1 | 1 |",
 		"## Threshold sweep",
 		"- Best F1: threshold 0.40",
 	)
@@ -126,7 +126,7 @@ func TestUndefinedRatesElsewherePrintNA(t *testing.T) {
 	s := metrics.Summary{
 		Threshold:  0.825,
 		Detection:  metrics.Point{FN: 3},
-		Categories: []metrics.Category{{Label: "sqli", Total: 3}},
+		Categories: []metrics.Category{{Label: "injection", Total: 3}},
 		BestF1:     &metrics.Point{Threshold: 0.5, TP: 1, FN: 2, Precision: 1, Recall: 1.0 / 3, F1: 0.5},
 	}
 	var text bytes.Buffer
@@ -203,7 +203,7 @@ func ptr(f float64) *float64 { return &f }
 func TestCompareWarnsOnPromptVersion(t *testing.T) {
 	rs := []results.Result{
 		{ID: "1", Label: "benign", AttackScore: ptr(0.1), Outcome: "allow"},
-		{ID: "2", Label: "sqli", AttackScore: ptr(0.9), Outcome: "block"},
+		{ID: "2", Label: "injection", AttackScore: ptr(0.9), Outcome: "block"},
 	}
 	a := &results.File{Header: results.Header{Threshold: 0.8}, Results: rs}
 	b := &results.File{Header: results.Header{Threshold: 0.8, PromptVersion: 2}, Results: rs}
@@ -219,7 +219,7 @@ func TestCompareWarnsOnPromptVersion(t *testing.T) {
 func TestAttributionNAWhenOnlyLimitBlocksDetected(t *testing.T) {
 	one := 1.0
 	f := &results.File{Header: results.Header{Threshold: 0.5}, Results: []results.Result{
-		{ID: "1", Label: "sqli", AttackScore: &one, Limit: "graphql_depth", Outcome: "deny"},
+		{ID: "1", Label: "injection", AttackScore: &one, Limit: "graphql_depth", Outcome: "deny"},
 	}}
 	s := summary(f)
 	if s.AttributionDetected != 0 {
@@ -235,7 +235,7 @@ func TestAttributionNAWhenOnlyLimitBlocksDetected(t *testing.T) {
 	contains(t, text.String(), "category attribution n/a")
 	contains(t, md.String(), "Category attribution: n/a")
 
-	f.Results = append(f.Results, results.Result{ID: "2", Label: "sqli", AttackScore: &one, Category: "xss", Outcome: "deny"})
+	f.Results = append(f.Results, results.Result{ID: "2", Label: "injection", AttackScore: &one, Category: "xss", Outcome: "deny"})
 	s = summary(f)
 	text.Reset()
 	if err := Text(&text, f.Header, s); err != nil {

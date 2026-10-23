@@ -26,7 +26,7 @@ Attack vs benign; errors excluded.
 
 | Label | Total | Detected | Recall | Attributed | Errors |
 |---|---|---|---|---|---|
-| sqli | 3 | 2 | 0.667 | 1 | 1 |
+| injection | 3 | 2 | 0.667 | 1 | 1 |
 | xss | 1 | 1 | 1.000 | 1 | 0 |
 
 Category attribution: 0.667 (detected attacks whose top category is the label).

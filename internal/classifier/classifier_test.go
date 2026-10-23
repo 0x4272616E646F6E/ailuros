@@ -14,8 +14,8 @@ import (
 )
 
 func TestLabels(t *testing.T) {
-	got := Labels([]policy.Category{{Name: "sqli"}, {Name: "xss"}})
-	if want := []string{"benign", "sqli", "xss"}; !reflect.DeepEqual(got, want) {
+	got := Labels([]policy.Category{{Name: "injection"}, {Name: "xss"}})
+	if want := []string{"benign", "injection", "xss"}; !reflect.DeepEqual(got, want) {
 		t.Errorf("Labels = %v, want %v", got, want)
 	}
 }
@@ -66,8 +66,8 @@ func TestPromptFencesHostileContent(t *testing.T) {
 }
 
 func TestCategoryList(t *testing.T) {
-	got := CategoryList([]policy.Category{{Name: "sqli", Description: "SQL injection"}, {Name: "scanner"}})
-	want := "- benign: " + BenignDescription + "\n- sqli: SQL injection\n- scanner\n"
+	got := CategoryList([]policy.Category{{Name: "injection", Description: "SQL injection"}, {Name: "recon"}})
+	want := "- benign: " + BenignDescription + "\n- injection: SQL injection\n- recon\n"
 	if got != want {
 		t.Errorf("CategoryList =\n%q\nwant\n%q", got, want)
 	}
@@ -82,8 +82,8 @@ func TestAttackScore(t *testing.T) {
 func TestVerdictValidate(t *testing.T) {
 	valid := []Verdict{
 		{Benign: 1},
-		{Benign: 0, Category: "sqli", Confidence: 1},
-		{Benign: 0.045, Category: "credential_stuffing", Confidence: 0.58, Probs: map[string]float64{"benign": 0.045, "credential_stuffing": 0.58, "sqli": 0.375}},
+		{Benign: 0, Category: "injection", Confidence: 1},
+		{Benign: 0.045, Category: "auth_abuse", Confidence: 0.58, Probs: map[string]float64{"benign": 0.045, "auth_abuse": 0.58, "injection": 0.375}},
 	}
 	for _, v := range valid {
 		if err := v.Validate(); err != nil {
@@ -94,9 +94,9 @@ func TestVerdictValidate(t *testing.T) {
 		"NaN benign":         {Benign: math.NaN()},
 		"negative benign":    {Benign: -0.1},
 		"benign above one":   {Benign: 1.5},
-		"infinite conf":      {Benign: 0, Category: "sqli", Confidence: math.Inf(1)},
-		"NaN in probs":       {Benign: 0.5, Probs: map[string]float64{"sqli": math.NaN()}},
-		"prob above one":     {Benign: 0.5, Probs: map[string]float64{"sqli": 1.01}},
+		"infinite conf":      {Benign: 0, Category: "injection", Confidence: math.Inf(1)},
+		"NaN in probs":       {Benign: 0.5, Probs: map[string]float64{"injection": math.NaN()}},
+		"prob above one":     {Benign: 0.5, Probs: map[string]float64{"injection": 1.01}},
 		"benign as category": {Benign: 0.9, Category: "benign", Confidence: 0.9},
 	}
 	for name, v := range invalid {

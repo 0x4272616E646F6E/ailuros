@@ -20,11 +20,11 @@ func byHeaders() *fake.Classifier {
 	return fake.New(func(_ context.Context, r *inspect.Request, _ []policy.Category) (classifier.Verdict, error) {
 		for _, v := range r.Headers {
 			if slices.ContainsFunc(v, func(s string) bool { return strings.Contains(s, "attack") }) {
-				return classifier.Verdict{Benign: 0.01, Category: "rce", Confidence: 0.99}, nil
+				return classifier.Verdict{Benign: 0.01, Category: "injection", Confidence: 0.99}, nil
 			}
 		}
 		if bytes.Contains(r.Body, []byte("attack")) {
-			return classifier.Verdict{Benign: 0.01, Category: "rce", Confidence: 0.99}, nil
+			return classifier.Verdict{Benign: 0.01, Category: "injection", Confidence: 0.99}, nil
 		}
 		return classifier.Verdict{Benign: 1}, nil
 	})

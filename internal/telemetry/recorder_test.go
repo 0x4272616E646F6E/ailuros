@@ -36,12 +36,12 @@ func TestRecorderBlock(t *testing.T) {
 	req := &inspect.Request{Method: "POST", Host: "h", Path: "/login", ClientIP: "1.2.3.4", Body: []byte("password=[REDACTED]")}
 	d := decision.Decision{
 		RequestID: "abc", Outcome: decision.Block, Classified: true,
-		Verdict: classifier.Verdict{Benign: 0.045, Category: "sqli", Confidence: 0.576},
+		Verdict: classifier.Verdict{Benign: 0.045, Category: "injection", Confidence: 0.576},
 		Route:   "default", Latency: 120 * time.Millisecond, Source: src,
 	}
 	rec.Observe(context.Background(), req, d)
 
-	if got := testutil.ToFloat64(m.decisions.WithLabelValues("block", "sqli", "default", "forwardauth")); got != 1 {
+	if got := testutil.ToFloat64(m.decisions.WithLabelValues("block", "injection", "default", "forwardauth")); got != 1 {
 		t.Errorf("decisions = %v, want 1", got)
 	}
 	if got := testutil.CollectAndCount(m.latency); got != 1 {
@@ -50,7 +50,7 @@ func TestRecorderBlock(t *testing.T) {
 	line := logLine(t, &buf)
 	want := map[string]any{
 		"msg": "decision", "level": "INFO", "request_id": "abc", "frontend": "forwardauth", "mode": "lite", "route": "default",
-		"method": "POST", "host": "h", "path": "/login", "outcome": "block", "attack_score": 0.955, "category": "sqli", "confidence": 0.576,
+		"method": "POST", "host": "h", "path": "/login", "outcome": "block", "attack_score": 0.955, "category": "injection", "confidence": 0.576,
 		"backend": "openai", "classifier_latency_ms": 120.0, "client_ip": "1.2.3.4",
 	}
 	for k, v := range want {
@@ -107,7 +107,7 @@ func TestRecorderCategoryLabel(t *testing.T) {
 		want string
 	}{
 		{"block uses the attack category", decision.Decision{Outcome: decision.Block, Classified: true, Verdict: classifier.Verdict{Benign: 0.1, Category: "xss", Confidence: 0.5}}, "xss"},
-		{"allow is benign even with a likely category", decision.Decision{Outcome: decision.Allow, Classified: true, Verdict: classifier.Verdict{Benign: 0.97, Category: "sqli", Confidence: 0.02}}, "benign"},
+		{"allow is benign even with a likely category", decision.Decision{Outcome: decision.Allow, Classified: true, Verdict: classifier.Verdict{Benign: 0.97, Category: "injection", Confidence: 0.02}}, "benign"},
 		{"block without a category", decision.Decision{Outcome: decision.Block, Classified: true, Verdict: classifier.Verdict{Benign: 0.1}}, "none"},
 		{"oversize block", decision.Decision{Outcome: decision.Block, Note: decision.NoteOversize}, "none"},
 		{"message limit block", decision.Decision{Outcome: decision.Block, Note: decision.NoteMessageLimit}, "none"},

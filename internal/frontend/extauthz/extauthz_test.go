@@ -179,10 +179,10 @@ func TestExposeVerdict(t *testing.T) {
 			got = o.GetHeader().GetValue()
 		}
 	}
-	if got != "block; attack_score=0.990; category=sqli; confidence=0.990" {
+	if got != "block; attack_score=0.990; category=injection; confidence=0.990" {
 		t.Errorf("x-decision-waf-decision = %q", got)
 	}
-	if strings.Contains(resp.GetDeniedResponse().GetBody(), "sqli") {
+	if strings.Contains(resp.GetDeniedResponse().GetBody(), "injection") {
 		t.Error("category leaked in the body")
 	}
 }

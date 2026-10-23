@@ -18,7 +18,7 @@ func labels() []string { return classifier.Labels(policy.DefaultCategories()) }
 
 const valid = `{"decision_waf_eval_dataset":1,"name":"t","description":"d"}
 {"id":"b1","label":"benign","note":"home","method":"GET","path":"/","headers":{"User-Agent":["curl/8"]},"tags":["path"]}
-{"id":"g1","label":"rce","method":"POST","path":"/pkg.Svc/Run","grpc":"pkg.Svc/Run","body_b64":"aGVsbG8gd29ybGQ="}
+{"id":"g1","label":"injection","method":"POST","path":"/pkg.Svc/Run","grpc":"pkg.Svc/Run","body_b64":"aGVsbG8gd29ybGQ="}
 `
 
 func TestReadValid(t *testing.T) {
@@ -67,7 +67,7 @@ func TestReadErrors(t *testing.T) {
 		{"future version", `{"decision_waf_eval_dataset":2}` + "\n" + ok, []string{"unsupported dataset version 2"}},
 		{"unknown field", h + `{"id":"b1","lable":"benign","method":"GET","path":"/"}` + "\n", []string{"line 2", `unknown field "lable"`}},
 		{"missing fields", h + `{"label":"benign"}` + "\n", []string{"line 2: (no id): missing id", "missing method", `path must start with "/"`}},
-		{"bad label", h + `{"id":"x","label":"sql","method":"GET","path":"/"}` + "\n", []string{`line 2: x: label "sql" is not one of benign, credential_stuffing`}},
+		{"bad label", h + `{"id":"x","label":"sql","method":"GET","path":"/"}` + "\n", []string{`line 2: x: label "sql" is not one of auth_abuse, benign`}},
 		{"bad base64", h + `{"id":"x","label":"benign","method":"POST","path":"/","body_b64":"%%%"}` + "\n", []string{"x: body_b64 is not valid base64"}},
 		{"bad grpc", h + `{"id":"x","label":"benign","method":"POST","path":"/a","grpc":"nomethod"}` + "\n", []string{`grpc "nomethod" must be "package.Service/Method"`}},
 		{"grpc path mismatch", h + `{"id":"x","label":"benign","method":"POST","path":"/a","grpc":"pkg.S/M"}` + "\n", []string{`path must be "/pkg.S/M"`}},
@@ -78,8 +78,8 @@ func TestReadErrors(t *testing.T) {
 		{"grpc with a non-gRPC content-type", h + `{"id":"x","label":"benign","method":"POST","path":"/pkg.S/M","grpc":"pkg.S/M","headers":{"content-type":["application/json"]}}` + "\n", []string{"line 2", "is not gRPC"}},
 		{"content-encoding", h + `{"id":"x","label":"benign","method":"POST","path":"/","headers":{"content-encoding":["gzip"]}}` + "\n", []string{"line 2", "content-encoding is not supported"}},
 		{"two content-types", h + `{"id":"x","label":"benign","method":"POST","path":"/","headers":{"content-type":["text/plain","application/grpc"]}}` + "\n", []string{"line 2", "several content-type values"}},
-		{"label twice", h + `{"id":"x","label":"benign","label":"sqli","method":"GET","path":"/"}` + "\n", []string{"line 2", `duplicate key "label"`}},
-		{"label in another case", h + `{"id":"x","label":"benign","LABEL":"sqli","method":"GET","path":"/"}` + "\n", []string{"line 2", `unknown field "LABEL"`}},
+		{"label twice", h + `{"id":"x","label":"benign","label":"injection","method":"GET","path":"/"}` + "\n", []string{"line 2", `duplicate key "label"`}},
+		{"label in another case", h + `{"id":"x","label":"benign","LABEL":"injection","method":"GET","path":"/"}` + "\n", []string{"line 2", `unknown field "LABEL"`}},
 		{"header field in another case", `{"decision_waf_eval_dataset":1,"NAME":"x"}` + "\n" + ok, []string{"line 1", `unknown field "NAME"`}},
 	}
 	for _, c := range cases {
@@ -162,7 +162,7 @@ func TestShippedSample(t *testing.T) {
 			lookalikes++
 		}
 	}
-	want := map[string]int{"benign": 10, "sqli": 3, "xss": 2, "path_traversal": 2, "rce": 3, "scanner": 4}
+	want := map[string]int{"benign": 10, "injection": 6, "xss": 2, "file_access": 2, "recon": 4}
 	if !reflect.DeepEqual(counts, want) || lookalikes != 5 || ds.Header.Name != "sample" {
 		t.Errorf("sample: labels %v, %d lookalikes, name %q", counts, lookalikes, ds.Header.Name)
 	}
@@ -181,7 +181,7 @@ func TestShippedSelfhosted(t *testing.T) {
 			lookalikes++
 		}
 	}
-	want := map[string]int{"benign": 133, "sqli": 27, "xss": 23, "path_traversal": 20, "rce": 30, "scanner": 30, "credential_stuffing": 8}
+	want := map[string]int{"benign": 133, "injection": 57, "xss": 23, "file_access": 20, "recon": 30, "auth_abuse": 8}
 	if !reflect.DeepEqual(counts, want) || lookalikes != 24 || ds.Header.Name != "selfhosted-2026-10" {
 		t.Errorf("selfhosted: labels %v, %d lookalikes, name %q", counts, lookalikes, ds.Header.Name)
 	}

@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	cats = []policy.Category{{Name: "sqli", Description: "SQL injection"}, {Name: "scanner"}}
+	cats = []policy.Category{{Name: "injection", Description: "SQL injection"}, {Name: "recon"}}
 	req  = &inspect.Request{Method: "GET", Path: "/items", Query: "id=1' OR '1'='1"}
 	ctx  = context.Background()
 )
@@ -56,7 +56,7 @@ func newClient(srv *httptest.Server, caps Capabilities) *Client {
 
 func TestClassifyBuildsSchemaRequest(t *testing.T) {
 	var got chatRequest
-	srv := server(t, func(r chatRequest) (int, any) { got = r; return 200, reply(`{"category":"sqli"}`, nil) })
+	srv := server(t, func(r chatRequest) (int, any) { got = r; return 200, reply(`{"category":"injection"}`, nil) })
 	if _, err := newClient(srv, Capabilities{JSONSchema: true, Logprobs: true}).Classify(ctx, req, cats); err != nil {
 		t.Fatal(err)
 	}
@@ -67,10 +67,10 @@ func TestClassifyBuildsSchemaRequest(t *testing.T) {
 		t.Fatalf("response_format = %+v", got.ResponseFormat)
 	}
 	enum := got.ResponseFormat.JSONSchema.Schema["properties"].(map[string]any)["category"].(map[string]any)["enum"]
-	if !reflect.DeepEqual(enum, []any{"benign", "sqli", "scanner"}) {
+	if !reflect.DeepEqual(enum, []any{"benign", "injection", "recon"}) {
 		t.Errorf("enum = %v", enum)
 	}
-	if len(got.Messages) != 2 || got.Messages[0].Role != "system" || !strings.Contains(got.Messages[0].Content, "- sqli: SQL injection") {
+	if len(got.Messages) != 2 || got.Messages[0].Role != "system" || !strings.Contains(got.Messages[0].Content, "- injection: SQL injection") {
 		t.Errorf("system message = %+v", got.Messages)
 	}
 	if got.Messages[1].Role != "user" || got.Messages[1].Content != classifier.Prompt(req) {
@@ -92,15 +92,15 @@ func TestClassifyJSONObjectFallbackRequest(t *testing.T) {
 func TestClassifyConfidenceFromLogprobs(t *testing.T) {
 	tokens := []tokenLogprob{
 		{Token: `{"`}, {Token: "category"}, {Token: `":"`},
-		{Token: "sql", Logprob: math.Log(0.9)}, {Token: "i", Logprob: math.Log(0.8)}, {Token: `"}`},
+		{Token: "inject", Logprob: math.Log(0.9)}, {Token: "ion", Logprob: math.Log(0.8)}, {Token: `"}`},
 	}
-	srv := server(t, func(chatRequest) (int, any) { return 200, reply(`{"category":"sqli"}`, tokens) })
+	srv := server(t, func(chatRequest) (int, any) { return 200, reply(`{"category":"injection"}`, tokens) })
 	v, err := newClient(srv, Capabilities{JSONSchema: true, Logprobs: true}).Classify(ctx, req, cats)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if v.Category != "sqli" || math.Abs(v.Confidence-0.72) > 1e-9 || math.Abs(v.Probs["sqli"]-0.72) > 1e-9 || math.Abs(v.Benign-0.28) > 1e-9 {
-		t.Errorf("verdict = %+v, want sqli @ 0.72 with benign 0.28", v)
+	if v.Category != "injection" || math.Abs(v.Confidence-0.72) > 1e-9 || math.Abs(v.Probs["injection"]-0.72) > 1e-9 || math.Abs(v.Benign-0.28) > 1e-9 {
+		t.Errorf("verdict = %+v, want injection @ 0.72 with benign 0.28", v)
 	}
 }
 
@@ -124,8 +124,8 @@ func TestLabelVerdict(t *testing.T) {
 		category           string
 	}{
 		{"benign", 0.6, 0.6, 0, ""},
-		{"sqli", 0.6, 0.4, 0.6, "sqli"},
-		{"sqli", 1, 0, 1, "sqli"},
+		{"injection", 0.6, 0.4, 0.6, "injection"},
+		{"injection", 1, 0, 1, "injection"},
 	}
 	for _, c := range cases {
 		v := labelVerdict(c.label, c.c)
@@ -142,7 +142,7 @@ func TestClassifyConfidenceWithoutUsableLogprobs(t *testing.T) {
 	}
 	for name, tokens := range cases {
 		t.Run(name, func(t *testing.T) {
-			srv := server(t, func(chatRequest) (int, any) { return 200, reply(`{"category":"sqli"}`, tokens) })
+			srv := server(t, func(chatRequest) (int, any) { return 200, reply(`{"category":"injection"}`, tokens) })
 			v, err := newClient(srv, Capabilities{JSONSchema: true, Logprobs: true}).Classify(ctx, req, cats)
 			if err != nil || v.Confidence != 1.0 {
 				t.Errorf("verdict = %+v, err = %v; want confidence 1.0", v, err)
@@ -154,8 +154,8 @@ func TestClassifyConfidenceWithoutUsableLogprobs(t *testing.T) {
 func TestClassifyRejectsBadOutput(t *testing.T) {
 	bodies := map[string]any{
 		"not json":      reply("not json", nil),
-		"wrong case":    reply(`{"category":"SQLI"}`, nil),
-		"unknown label": reply(`{"category":"rce"}`, nil),
+		"wrong case":    reply(`{"category":"INJECTION"}`, nil),
+		"unknown label": reply(`{"category":"xss"}`, nil),
 		"missing field": reply(`{}`, nil),
 	}
 	for name, body := range bodies {
@@ -248,7 +248,7 @@ func TestUnmatchedLogprobsAreReported(t *testing.T) {
 		{nil, 0},
 	} {
 		calls = 0
-		srv := server(t, func(chatRequest) (int, any) { return 200, reply(`{"category":"sqli"}`, c.tokens) })
+		srv := server(t, func(chatRequest) (int, any) { return 200, reply(`{"category":"injection"}`, c.tokens) })
 		cl := newClient(srv, Capabilities{Logprobs: true})
 		cl.OnUnmatchedLogprobs = func() { calls++ }
 		v, err := cl.Classify(ctx, req, cats)

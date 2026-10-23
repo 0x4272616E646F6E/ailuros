@@ -25,7 +25,7 @@ import (
 const tiny = `{"decision_waf_eval_dataset":1,"name":"tiny"}
 {"id":"b1","label":"benign","method":"GET","path":"/home"}
 {"id":"b2","label":"benign","method":"GET","path":"/about"}
-{"id":"a1","label":"sqli","method":"GET","path":"/evil"}
+{"id":"a1","label":"injection","method":"GET","path":"/evil"}
 `
 
 func env(model string) map[string]string {
@@ -35,7 +35,7 @@ func env(model string) map[string]string {
 func keyword() *fake.Classifier {
 	return fake.New(func(_ context.Context, r *inspect.Request, _ []policy.Category) (classifier.Verdict, error) {
 		if strings.Contains(r.Path, "evil") {
-			return classifier.Verdict{Benign: 0.1, Category: "sqli", Confidence: 0.9}, nil
+			return classifier.Verdict{Benign: 0.1, Category: "injection", Confidence: 0.9}, nil
 		}
 		return classifier.Verdict{Benign: 0.95}, nil
 	})
@@ -326,7 +326,7 @@ func TestRunWithoutErrorsStaysQuiet(t *testing.T) {
 }
 
 func TestResumeRefusesChangedPolicyContent(t *testing.T) {
-	pol := writeFile(t, "policy.yaml", "categories: [{name: sqli}]")
+	pol := writeFile(t, "policy.yaml", "categories: [{name: injection}]")
 	vars := env("m")
 	vars["DECISION_WAF_POLICY_FILE"] = pol
 	ds := writeFile(t, "tiny.jsonl", tiny)
@@ -343,7 +343,7 @@ func TestResumeRefusesChangedPolicyContent(t *testing.T) {
 	if code := h.main("run", "--dataset", ds, "--out", out, "--resume"); code != 0 {
 		t.Fatalf("unchanged policy: resume exit %d: %s", code, h.stderr)
 	}
-	if err := os.WriteFile(pol, []byte("categories: [{name: sqli}, {name: xss}]"), 0o644); err != nil {
+	if err := os.WriteFile(pol, []byte("categories: [{name: injection}, {name: xss}]"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	h = newCLI(vars, keyword(), nil)

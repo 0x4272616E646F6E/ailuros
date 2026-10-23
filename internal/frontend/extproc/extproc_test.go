@@ -93,7 +93,7 @@ func TestLiteDenials(t *testing.T) {
 	}{
 		{"block", fake.Attacks(), policy.FailOpen, with(httpHeaders[:6], ":path", "/attack"), 403, 0, "request blocked"},
 		{"fail closed", fake.Failing(errors.New("down")), policy.FailClosed, httpHeaders, 503, 0, "service unavailable"},
-		{"grpc block", fake.Returning(classifier.Verdict{Benign: 0, Category: "sqli", Confidence: 1}), policy.FailOpen, grpcHeaders, 403, 7, "request blocked"},
+		{"grpc block", fake.Returning(classifier.Verdict{Benign: 0, Category: "injection", Confidence: 1}), policy.FailOpen, grpcHeaders, 403, 7, "request blocked"},
 		{"grpc fail closed", fake.Failing(errors.New("down")), policy.FailClosed, grpcHeaders, 503, 14, "service unavailable"},
 	}
 	for _, c := range cases {
@@ -121,10 +121,10 @@ func TestLiteFailOpenContinues(t *testing.T) {
 func TestExposeVerdictHeader(t *testing.T) {
 	cfg := lite
 	cfg.ExposeVerdict = true
-	h := newHarness(t, fake.Returning(classifier.Verdict{Benign: 0.97, Category: "sqli", Confidence: 0.02}), cfg, policy.FailOpen)
+	h := newHarness(t, fake.Returning(classifier.Verdict{Benign: 0.97, Category: "injection", Confidence: 0.02}), cfg, policy.FailOpen)
 	s := h.open()
 	send(t, s, headersMsg(false, httpHeaders...))
-	if got := mutationHeaders(t, recv(t, s))["x-decision-waf-decision"]; got != "allow; attack_score=0.030; category=sqli; confidence=0.020" {
+	if got := mutationHeaders(t, recv(t, s))["x-decision-waf-decision"]; got != "allow; attack_score=0.030; category=injection; confidence=0.020" {
 		t.Errorf("x-decision-waf-decision = %q", got)
 	}
 }

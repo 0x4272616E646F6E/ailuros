@@ -255,7 +255,7 @@ func TestGRPCDetection(t *testing.T) {
 }
 
 func TestBlockResponse(t *testing.T) {
-	s, _ := newServer(fake.Returning(classifier.Verdict{Benign: 0.045, Category: "sqli", Confidence: 0.576}), policy.FailOpen, inspect.ModeLite, false)
+	s, _ := newServer(fake.Returning(classifier.Verdict{Benign: 0.045, Category: "injection", Confidence: 0.576}), policy.FailOpen, inspect.ModeLite, false)
 	rr := serve(s, traefik("GET", "/items?id=1'--"))
 	if rr.Code != http.StatusForbidden || rr.Header().Get("Content-Type") != "application/json" {
 		t.Fatalf("status = %d, content-type = %q", rr.Code, rr.Header().Get("Content-Type"))
@@ -267,7 +267,7 @@ func TestBlockResponse(t *testing.T) {
 	if body["error"] != "request blocked" || body["request_id"] != rr.Header().Get("X-Decision-Waf-Request-Id") {
 		t.Errorf("body = %v", body)
 	}
-	if strings.Contains(rr.Body.String(), "sqli") || rr.Header().Get("X-Decision-Waf-Decision") != "" {
+	if strings.Contains(rr.Body.String(), "injection") || rr.Header().Get("X-Decision-Waf-Decision") != "" {
 		t.Error("category leaked to client without DECISION_WAF_EXPOSE_VERDICT")
 	}
 }
@@ -286,9 +286,9 @@ func TestFailureModes(t *testing.T) {
 }
 
 func TestExposeVerdict(t *testing.T) {
-	s, _ := newServer(fake.Returning(classifier.Verdict{Benign: 0.045, Category: "sqli", Confidence: 0.576}), policy.FailOpen, inspect.ModeLite, true)
+	s, _ := newServer(fake.Returning(classifier.Verdict{Benign: 0.045, Category: "injection", Confidence: 0.576}), policy.FailOpen, inspect.ModeLite, true)
 	rr := serve(s, traefik("GET", "/"))
-	if got := rr.Header().Get("X-Decision-Waf-Decision"); got != "block; attack_score=0.955; category=sqli; confidence=0.576" {
+	if got := rr.Header().Get("X-Decision-Waf-Decision"); got != "block; attack_score=0.955; category=injection; confidence=0.576" {
 		t.Errorf("X-Decision-Waf-Decision = %q", got)
 	}
 }

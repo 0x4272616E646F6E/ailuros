@@ -52,7 +52,7 @@ func (f *Classifier) Last() *inspect.Request {
 	return f.last
 }
 
-var AttackVerdict = classifier.Verdict{Benign: 0.01, Category: "sqli", Confidence: 0.99}
+var AttackVerdict = classifier.Verdict{Benign: 0.01, Category: "injection", Confidence: 0.99}
 
 func Attacks() *Classifier {
 	return New(func(_ context.Context, r *inspect.Request, _ []policy.Category) (classifier.Verdict, error) {

@@ -112,7 +112,7 @@ func decide(state string, criteria map[string]*string) answer {
 	choice := benignLabel
 	switch {
 	case strings.Contains(state, markerAttack):
-		choice = pick(criteria, "sqli")
+		choice = pick(criteria, "injection")
 	case strings.Contains(state, markerXSS):
 		choice = pick(criteria, "xss")
 	}

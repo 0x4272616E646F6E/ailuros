@@ -37,7 +37,7 @@ func keyword() *fake.Classifier {
 	return fake.New(func(ctx context.Context, r *inspect.Request, _ []policy.Category) (classifier.Verdict, error) {
 		switch {
 		case strings.Contains(r.Path, "evil"):
-			return classifier.Verdict{Benign: 0.1, Category: "sqli", Confidence: 0.9}, nil
+			return classifier.Verdict{Benign: 0.1, Category: "injection", Confidence: 0.9}, nil
 		case strings.Contains(r.Path, "broken"):
 			return classifier.Verdict{}, classifier.Errorf(classifier.ReasonUpstream5xx, "503")
 		case strings.Contains(r.Path, "hang"):
@@ -76,12 +76,12 @@ func runAll(t *testing.T, eng *decision.Engine, entries []dataset.Entry, done ma
 
 func TestRunRecordsScoresAndErrors(t *testing.T) {
 	got := runAll(t, engine(keyword()), []dataset.Entry{
-		entry("ok", "benign", "/home"), entry("evil", "sqli", "/evil"), entry("broken", "benign", "/broken"),
+		entry("ok", "benign", "/home"), entry("evil", "injection", "/evil"), entry("broken", "benign", "/broken"),
 	}, nil, 1024, 1)
 	if r := got["ok"]; r.AttackScore == nil || math.Abs(*r.AttackScore-0.1) > 1e-9 || r.Outcome != "allow" || r.Error != "" {
 		t.Errorf("ok = %+v", r)
 	}
-	if r := got["evil"]; r.AttackScore == nil || math.Abs(*r.AttackScore-0.9) > 1e-9 || r.Category != "sqli" || r.Outcome != "block" || r.Label != "sqli" {
+	if r := got["evil"]; r.AttackScore == nil || math.Abs(*r.AttackScore-0.9) > 1e-9 || r.Category != "injection" || r.Outcome != "block" || r.Label != "injection" {
 		t.Errorf("evil = %+v", r)
 	}
 	if r := got["broken"]; r.AttackScore != nil || r.Error != "upstream_5xx" || r.Outcome != "fail_open" {
@@ -201,10 +201,10 @@ func labelCounts(es []dataset.Entry) map[string]int {
 }
 
 func TestSampleStratified(t *testing.T) {
-	entries := append(many("b", "benign", 80), many("s", "sqli", 20)...)
+	entries := append(many("b", "benign", 80), many("s", "injection", 20)...)
 	got := Sample(entries, 10, 1)
-	if c := labelCounts(got); c["benign"] != 8 || c["sqli"] != 2 {
-		t.Errorf("counts = %v, want 8 benign 2 sqli", c)
+	if c := labelCounts(got); c["benign"] != 8 || c["injection"] != 2 {
+		t.Errorf("counts = %v, want 8 benign 2 injection", c)
 	}
 	if again := Sample(entries, 10, 1); !slices.EqualFunc(got, again, func(a, b dataset.Entry) bool { return a.ID == b.ID }) {
 		t.Error("same seed gave a different sample")
@@ -222,9 +222,9 @@ func TestSampleStratified(t *testing.T) {
 }
 
 func TestSampleKeepsEveryLabel(t *testing.T) {
-	entries := append(many("b", "benign", 98), entry("x", "xss", "/x"), entry("s", "sqli", "/s"))
+	entries := append(many("b", "benign", 98), entry("x", "xss", "/x"), entry("s", "injection", "/s"))
 	got := Sample(entries, 10, 1)
-	if c := labelCounts(got); len(got) != 10 || c["xss"] != 1 || c["sqli"] != 1 || c["benign"] != 8 {
+	if c := labelCounts(got); len(got) != 10 || c["xss"] != 1 || c["injection"] != 1 || c["benign"] != 8 {
 		t.Errorf("counts = %v (len %d), want 8/1/1", c, len(got))
 	}
 }
@@ -239,7 +239,7 @@ func TestSampleNoOp(t *testing.T) {
 }
 
 func TestResultOfLimit(t *testing.T) {
-	r := ResultOf(dataset.Entry{ID: "1", Label: "scanner"}, decision.Decision{Outcome: decision.Block, Note: decision.NoteLimit, Limit: "graphql_depth"})
+	r := ResultOf(dataset.Entry{ID: "1", Label: "recon"}, decision.Decision{Outcome: decision.Block, Note: decision.NoteLimit, Limit: "graphql_depth"})
 	if r.Failed() || *r.AttackScore != 1 || r.Limit != "graphql_depth" || r.Error != "" {
 		t.Errorf("result %+v; want a block at every threshold, recorded with its limit", r)
 	}

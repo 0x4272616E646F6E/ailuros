@@ -9,7 +9,7 @@ detection (attack vs benign, errors excluded)
   TP 3  FP 1  TN 4  FN 1
 
 attacks by label        total  detected  recall  attributed  errors
-  sqli                      3         2   0.667           1       1
+  injection                 3         2   0.667           1       1
   xss                       1         1   1.000           1       0
   category attribution 0.667 (detected attacks whose top category is the label)
 

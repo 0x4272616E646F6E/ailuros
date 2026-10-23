@@ -17,14 +17,14 @@ func fixture() *results.File {
 	return &results.File{
 		Header: results.Header{Threshold: 0.8, Dataset: results.DatasetInfo{Entries: 11}},
 		Results: []results.Result{
-			{ID: "a-1", Label: "sqli", Tags: []string{"query"}, AttackScore: score(0.95), Category: "sqli", Outcome: "block", LatencyMS: 100},
-			{ID: "a-2", Label: "sqli", Tags: []string{"query"}, AttackScore: score(0.85), Category: "xss", Outcome: "block", LatencyMS: 200},
-			{ID: "a-3", Label: "sqli", Tags: []string{"path"}, AttackScore: score(0.40), Category: "sqli", Outcome: "allow", LatencyMS: 300},
+			{ID: "a-1", Label: "injection", Tags: []string{"query"}, AttackScore: score(0.95), Category: "injection", Outcome: "block", LatencyMS: 100},
+			{ID: "a-2", Label: "injection", Tags: []string{"query"}, AttackScore: score(0.85), Category: "xss", Outcome: "block", LatencyMS: 200},
+			{ID: "a-3", Label: "injection", Tags: []string{"path"}, AttackScore: score(0.40), Category: "injection", Outcome: "allow", LatencyMS: 300},
 			{ID: "a-4", Label: "xss", Tags: []string{"query"}, AttackScore: score(0.90), Category: "xss", Outcome: "block", LatencyMS: 400},
-			{ID: "a-5", Label: "sqli", Outcome: "fail_open", Error: "timeout", LatencyMS: 500},
+			{ID: "a-5", Label: "injection", Outcome: "fail_open", Error: "timeout", LatencyMS: 500},
 			{ID: "b-1", Label: "benign", AttackScore: score(0.05), Outcome: "allow", LatencyMS: 600},
 			{ID: "b-2", Label: "benign", AttackScore: score(0.10), Outcome: "allow", LatencyMS: 700},
-			{ID: "b-3", Label: "benign", Tags: []string{"lookalike"}, AttackScore: score(0.85), Category: "sqli", Outcome: "block", LatencyMS: 800},
+			{ID: "b-3", Label: "benign", Tags: []string{"lookalike"}, AttackScore: score(0.85), Category: "injection", Outcome: "block", LatencyMS: 800},
 			{ID: "b-4", Label: "benign", Tags: []string{"lookalike"}, AttackScore: score(0.30), Outcome: "allow", LatencyMS: 900},
 			{ID: "b-5", Label: "benign", AttackScore: score(0.02), Outcome: "allow", LatencyMS: 1000},
 			{ID: "b-6", Label: "benign", Outcome: "fail_open", Error: "rate_limited", LatencyMS: 1100},
@@ -91,7 +91,7 @@ func TestSummarize(t *testing.T) {
 		t.Errorf("errors by reason = %v", s.ErrorsByReason)
 	}
 	want := []Category{
-		{Label: "sqli", Total: 3, Detected: 2, Recall: 2.0 / 3, Attributed: 1, Errors: 1},
+		{Label: "injection", Total: 3, Detected: 2, Recall: 2.0 / 3, Attributed: 1, Errors: 1},
 		{Label: "xss", Total: 1, Detected: 1, Recall: 1, Attributed: 1},
 	}
 	if len(s.Categories) != 2 {
@@ -167,7 +167,7 @@ func TestIncompleteWarning(t *testing.T) {
 func TestFlaggedMatchesTheEngine(t *testing.T) {
 	benign := 0.9
 	score := 1 - benign
-	rs := []results.Result{{ID: "a", Label: "sqli", AttackScore: &score}}
+	rs := []results.Result{{ID: "a", Label: "injection", AttackScore: &score}}
 	if p := At(rs, 0.1); p.TP != 1 {
 		t.Errorf("At(0.1) = %+v, want the attack counted as detected", p)
 	}
@@ -177,7 +177,7 @@ func TestLimitBlocksSkipAttributionAndLatency(t *testing.T) {
 	base := Summarize(fixture(), Options{})
 	f := fixture()
 	for _, id := range []string{"l-1", "l-2", "l-3", "l-4", "l-5", "l-6"} {
-		f.Results = append(f.Results, results.Result{ID: id, Label: "sqli", AttackScore: score(1), Outcome: "block", Limit: "graphql_depth"})
+		f.Results = append(f.Results, results.Result{ID: id, Label: "injection", AttackScore: score(1), Outcome: "block", Limit: "graphql_depth"})
 	}
 	got := Summarize(f, Options{})
 	if !near(got.Attribution, base.Attribution) {
@@ -187,8 +187,8 @@ func TestLimitBlocksSkipAttributionAndLatency(t *testing.T) {
 		t.Errorf("latency %+v, want %+v (limit blocks do not call the model)", got.Latency, base.Latency)
 	}
 	for _, c := range got.Categories {
-		if c.Label == "sqli" && (c.Detected != 8 || c.Total != 9) {
-			t.Errorf("sqli detected %d of %d, want 8 of 9: limit blocks still count toward recall", c.Detected, c.Total)
+		if c.Label == "injection" && (c.Detected != 8 || c.Total != 9) {
+			t.Errorf("injection detected %d of %d, want 8 of 9: limit blocks still count toward recall", c.Detected, c.Total)
 		}
 	}
 }

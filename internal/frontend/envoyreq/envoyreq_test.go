@@ -72,14 +72,14 @@ func TestWithDeadlineMargin(t *testing.T) {
 }
 
 func TestDecisionHeaders(t *testing.T) {
-	d := decision.Decision{RequestID: "abc", Outcome: decision.Block, Classified: true, Verdict: classifier.Verdict{Benign: 0.045, Category: "sqli", Confidence: 0.576}}
+	d := decision.Decision{RequestID: "abc", Outcome: decision.Block, Classified: true, Verdict: classifier.Verdict{Benign: 0.045, Category: "injection", Confidence: 0.576}}
 	h := DecisionHeaders(d, false)
 	if len(h) != 1 || h[0].GetHeader().GetKey() != frontend.RequestIDHeader || h[0].GetHeader().GetValue() != "abc" ||
 		h[0].GetAppendAction() != corev3.HeaderValueOption_OVERWRITE_IF_EXISTS_OR_ADD {
 		t.Errorf("headers = %v", h)
 	}
 	h = DecisionHeaders(d, true)
-	if len(h) != 2 || h[1].GetHeader().GetKey() != frontend.DecisionHeader || h[1].GetHeader().GetValue() != "block; attack_score=0.955; category=sqli; confidence=0.576" {
+	if len(h) != 2 || h[1].GetHeader().GetKey() != frontend.DecisionHeader || h[1].GetHeader().GetValue() != "block; attack_score=0.955; category=injection; confidence=0.576" {
 		t.Errorf("headers with expose = %v", h)
 	}
 }

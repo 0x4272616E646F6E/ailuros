@@ -28,7 +28,7 @@ func TestRoundTrip(t *testing.T) {
 		t.Fatal(err)
 	}
 	want := []Result{
-		{ID: "a", Label: "sqli", Tags: []string{"query"}, AttackScore: score(0.97), Category: "sqli", Outcome: "block", LatencyMS: 2143},
+		{ID: "a", Label: "injection", Tags: []string{"query"}, AttackScore: score(0.97), Category: "injection", Outcome: "block", LatencyMS: 2143},
 		{ID: "b", Label: "benign", AttackScore: score(0), Outcome: "allow", LatencyMS: 5},
 		{ID: "c", Label: "benign", Outcome: "fail_open", Error: "timeout", LatencyMS: 1000},
 	}

@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	cats = []policy.Category{{Name: "sqli", Description: "SQL injection"}, {Name: "scanner"}}
+	cats = []policy.Category{{Name: "injection", Description: "SQL injection"}, {Name: "recon"}}
 	req  = &inspect.Request{Method: "GET", Path: "/items", Query: "id=1' OR '1'='1"}
 	ctx  = context.Background()
 )
@@ -46,7 +46,7 @@ func TestClassifyRequestShape(t *testing.T) {
 	var got request
 	srv := server(t, func(r *http.Request, body request) (int, any) {
 		gotReq, got = r, body
-		return 200, answer("benign", map[string]float64{"benign": 0.97, "sqli": 0.02, "scanner": 0.01})
+		return 200, answer("benign", map[string]float64{"benign": 0.97, "injection": 0.02, "recon": 0.01})
 	})
 	if _, err := New(srv.URL, "jev-latest", "k", srv.Client()).Classify(ctx, req, cats); err != nil {
 		t.Fatal(err)
@@ -64,11 +64,11 @@ func TestClassifyRequestShape(t *testing.T) {
 	if d := q.Criteria["benign"]; d == nil || *d != classifier.BenignDescription {
 		t.Errorf("benign criterion = %v", d)
 	}
-	if d := q.Criteria["sqli"]; d == nil || *d != "SQL injection" {
-		t.Errorf("sqli criterion = %v", d)
+	if d := q.Criteria["injection"]; d == nil || *d != "SQL injection" {
+		t.Errorf("injection criterion = %v", d)
 	}
-	if d, ok := q.Criteria["scanner"]; !ok || d != nil {
-		t.Errorf("scanner criterion = %v (present %v), want null", d, ok)
+	if d, ok := q.Criteria["recon"]; !ok || d != nil {
+		t.Errorf("recon criterion = %v (present %v), want null", d, ok)
 	}
 }
 
@@ -81,11 +81,11 @@ func TestClassifyMapsDistribution(t *testing.T) {
 		category   string
 		confidence float64
 	}{
-		{"attack", "sqli", map[string]float64{"benign": 0.1, "sqli": 0.85, "scanner": 0.05}, 0.1, "sqli", 0.85},
-		{"split attack", "benign", map[string]float64{"benign": 0.4, "sqli": 0.25, "scanner": 0.35}, 0.4, "scanner", 0.35},
-		{"benign", "benign", map[string]float64{"benign": 0.97, "sqli": 0.02, "scanner": 0.01}, 0.97, "sqli", 0.02},
+		{"attack", "injection", map[string]float64{"benign": 0.1, "injection": 0.85, "recon": 0.05}, 0.1, "injection", 0.85},
+		{"split attack", "benign", map[string]float64{"benign": 0.4, "injection": 0.25, "recon": 0.35}, 0.4, "recon", 0.35},
+		{"benign", "benign", map[string]float64{"benign": 0.97, "injection": 0.02, "recon": 0.01}, 0.97, "injection", 0.02},
 		{"no attack probabilities", "benign", map[string]float64{"benign": 1}, 1, "", 0},
-		{"tie", "sqli", map[string]float64{"benign": 0.2, "scanner": 0.4, "sqli": 0.4}, 0.2, "sqli", 0.4},
+		{"tie", "injection", map[string]float64{"benign": 0.2, "recon": 0.4, "injection": 0.4}, 0.2, "injection", 0.4},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
@@ -106,11 +106,11 @@ func TestClassifyRejectsBadOutput(t *testing.T) {
 		body any
 		want classifier.Reason
 	}{
-		"unknown choice":        {answer("rce", map[string]float64{"rce": 1}), classifier.ReasonBadOutput},
-		"missing benign":        {answer("sqli", map[string]float64{"sqli": 1}), classifier.ReasonBadResponse},
+		"unknown choice":        {answer("xss", map[string]float64{"xss": 1}), classifier.ReasonBadOutput},
+		"missing benign":        {answer("injection", map[string]float64{"injection": 1}), classifier.ReasonBadResponse},
 		"missing answer":        {map[string]any{"answers": map[string]any{}}, classifier.ReasonBadResponse},
-		"probability above one": {answer("sqli", map[string]float64{"benign": 0.1, "sqli": 1.2}), classifier.ReasonBadResponse},
-		"negative benign":       {answer("sqli", map[string]float64{"benign": -0.1, "sqli": 0.9}), classifier.ReasonBadResponse},
+		"probability above one": {answer("injection", map[string]float64{"benign": 0.1, "injection": 1.2}), classifier.ReasonBadResponse},
+		"negative benign":       {answer("injection", map[string]float64{"benign": -0.1, "injection": 0.9}), classifier.ReasonBadResponse},
 		"benign above one":      {answer("benign", map[string]float64{"benign": 1.5}), classifier.ReasonBadResponse},
 	}
 	for name, c := range bodies {

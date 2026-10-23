@@ -40,7 +40,7 @@ func TestStubDecidesOnMarkers(t *testing.T) {
 		category string
 	}{
 		{"/hello", 0.99, ""},
-		{"/search?q=attack", 0.01, "sqli"},
+		{"/search?q=attack", 0.01, "injection"},
 		{"/comment/xss-marker", 0.01, "xss"},
 	}
 	for _, c := range cases {

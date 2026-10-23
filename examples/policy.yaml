@@ -1,16 +1,18 @@
 categories:
-  - name: sqli
-    description: "SQL injection: SQL syntax, quotes, comments, or UNION/boolean tricks in parameters, headers, or body."
+  - name: injection
+    description: "Code, query or command injection into an interpreter: SQL syntax, quotes, comments or UNION/boolean tricks; NoSQL operators such as $ne, $gt or $where; shell metacharacters or command substitution; template or expression syntax such as {{...}} or ${...}; JNDI or deserialization payloads; CRLF sequences (%0d%0a) that inject headers."
   - name: xss
     description: "Cross-site scripting: HTML or JavaScript payloads such as script tags, event handlers, or javascript: URLs."
-  - name: path_traversal
+  - name: file_access
     description: "Path traversal or local file inclusion: ../ sequences, encoded variants, or requests for sensitive files such as /etc/passwd."
-  - name: rce
-    description: "Remote code or command execution: shell metacharacters, command substitution, template or expression injection, deserialization payloads, or JNDI lookups."
-  - name: scanner
+  - name: ssrf_redirect
+    description: "Server-side request forgery or open redirect: a URL, IP address or internal hostname in a parameter or header that the server might fetch or redirect to, pointing at a cloud metadata address (169.254.169.254), localhost, private networks, file:// or gopher://, or at an unrelated external site, including //host and backslash tricks."
+  - name: recon
     description: "Automated reconnaissance: vulnerability scanners, probing for admin panels, backups, .git or .env files, or known exploit paths."
-  - name: credential_stuffing
+  - name: auth_abuse
     description: "Automated login abuse: scripted authentication attempts using lists of usernames and passwords."
+  - name: other_attack
+    description: "Clearly malicious traffic that fits none of the other categories. Do not use it for unusual but legitimate requests."
 
 routes:
   - match: { path_prefix: /admin }
